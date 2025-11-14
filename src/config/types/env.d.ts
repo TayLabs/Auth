@@ -1,9 +1,7 @@
-import { type EnvSchema } from '@/config/env';
+import { type EnvSchema } from './env';
 
 declare global {
 	namespace NodeJS {
 		interface ProcessEnv extends EnvSchema {}
 	}
 }
-
-export {};

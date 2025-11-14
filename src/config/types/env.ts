@@ -17,7 +17,7 @@ const envSchema = z.object({
 			error: 'Must be set to development, production, or test',
 		})
 		.default('production'),
-	PORT: z.coerce.number<Number>().default(7313),
+	PORT: z.coerce.number().optional(),
 });
 
 try {
