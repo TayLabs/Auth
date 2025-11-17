@@ -23,6 +23,11 @@ const envSchema = z.object({
     .default('7313')
     .transform(Number),
   DATABASE_URL: z.url('Please include a valid url for the database'),
+  CHECK_PASSWORD_COMPLEXITY: z
+    .string()
+    .regex(/^(true|false)$/, 'Must be true or false')
+    .transform((str) => (str === 'true' ? true : false))
+    .default(false),
 });
 type EnvVariables = z.infer<typeof envSchema>;
 
