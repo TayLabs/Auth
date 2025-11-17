@@ -1,10 +1,10 @@
 import express from 'express';
-import { authRouter } from './auth/routes/auth.routes';
+import { authRoutes } from './auth/routes/index.router';
 
 const app = express();
 
 app.use(express.json());
 
-app.use(authRouter);
+app.use(authRoutes);
 
 export default app;
