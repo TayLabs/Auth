@@ -37,11 +37,10 @@ try {
 
     console.error(
       '❌ Invalid environment variables:',
-      errorTree
-        ? Object.entries(errorTree).map(
-            ([key, value]) => `${key}: ${value.errors.join(', ')}`
-          )
-        : 'unknown error'
+      errorTree &&
+        Object.entries(errorTree).map(
+          ([key, value]) => `${key}: ${value.errors.join(', ')}`
+        )
     );
     process.exit(1);
   }
