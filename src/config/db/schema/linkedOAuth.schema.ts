@@ -15,7 +15,5 @@ export const linkedOAuthTable = pgTable('linked_oauth', {
 		.notNull(),
 	providerAccountId: varchar('provider_account_id', { length: 256 }).notNull(),
 	providerEmail: varchar('provider_email', { length: 256 }).notNull(),
-	accessToken: varchar('access_token', { length: 512 }).notNull(),
-	refreshToken: varchar('refresh_token', { length: 512 }),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
