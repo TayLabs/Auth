@@ -1,5 +1,5 @@
 import express from 'express';
-import { authRoutes } from './auth/routes/index.router';
+import { authRoutes } from './auth/routes/index.routes';
 import helmet from 'helmet';
 import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
