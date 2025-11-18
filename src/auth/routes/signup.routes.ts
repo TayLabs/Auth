@@ -4,8 +4,8 @@ import loginBodySchema from '../dto/login.dto';
 import { signupController } from '../controllers/signup.controller';
 
 // /auth/*
-const loginRouter = express.Router();
+const signupRouter = express.Router();
 
-loginRouter.post('/signup', validate(loginBodySchema), signupController);
+signupRouter.post('/signup', validate(loginBodySchema), signupController);
 
-export { loginRouter };
+export { signupRouter };

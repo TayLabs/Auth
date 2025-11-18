@@ -23,7 +23,7 @@ app.use(expressSession);
 app.use(errorHandler);
 
 // Register routes (anything exported from /*/routes/*.router.ts)
-app.use(authRoutes);
+app.use('/api/v1', authRoutes);
 
 // Handle 404 - Not Found
 app.use(notFoundHandler);
