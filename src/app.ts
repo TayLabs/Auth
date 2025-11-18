@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
 import bodyParser from 'body-parser';
+import expressSession from './config/express-session';
 
 const app = express();
 
@@ -14,6 +15,9 @@ app.use(bodyParser.json());
 // Security middleware
 app.use(helmet());
 app.disable('x-powered-by'); // Disable the 'X-Powered-By' header for security (normally includes framework being used)
+
+// Session
+app.use(expressSession);
 
 // Global error handler (async functions call next(err))
 app.use(errorHandler);
