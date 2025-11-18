@@ -3,8 +3,9 @@ import { controller } from '@/middleware/controller.middleware';
 import HttpStatus from '@/types/HttpStatus.enum';
 
 export const loginController = controller<LoginReqBody, LoginResBody>(
-	(req, res, next) => {
+	(req, res, _next) => {
 		// Login logic here
+		console.log('logging in user');
 
 		res.status(HttpStatus.CREATED).json({
 			success: true,

@@ -16,9 +16,17 @@ export function controller<
 ): RequestHandler<Params, ResBody, ReqBody, Query> {
 	return async (req, res, next) => {
 		try {
-			func(req, res, next);
+			if (isAsync(func)) {
+				await func(req, res, next);
+			} else {
+				func(req, res, next);
+			}
 		} catch (err) {
 			next(err);
 		}
 	};
 }
+
+const isAsync = (fn: any) => {
+	return fn?.constructor?.name === 'AsyncFunction';
+};

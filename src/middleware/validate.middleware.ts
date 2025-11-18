@@ -10,6 +10,7 @@ export function validate<T extends z.ZodObject>(
 		try {
 			const validatedData = await schema.parseAsync(req.body);
 			req.body = validatedData;
+			next();
 		} catch (err) {
 			if (err instanceof z.ZodError) {
 				const errorTree = z.treeifyError<T>(err as z.ZodError<T>).properties;
