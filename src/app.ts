@@ -22,6 +22,6 @@ app.use(errorHandler);
 app.use(authRoutes);
 
 // Handle 404 - Not Found
-app.use('*', notFoundHandler);
+app.use(notFoundHandler);
 
 export default app;
