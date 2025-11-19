@@ -18,7 +18,7 @@ const initializeDatabase = () => {
     })
     .catch((err) => {
       console.error('🛑 Database connection test failed:', err);
-      throw new Error('Failed to connect to the database.');
+      process.exit(1);
     });
 
   return db;
