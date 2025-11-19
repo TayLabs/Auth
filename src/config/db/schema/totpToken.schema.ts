@@ -1,10 +1,12 @@
 import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { bytea } from './types/bytea';
 import { userTable } from './user.schema';
+import { UUID } from 'node:crypto';
 
 export const totpTokenTable = pgTable('totp_tokens', {
-	id: uuid('id').primaryKey().defaultRandom(),
+	id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
 	userId: uuid('user_id')
+		.$type<UUID>()
 		.references(() => userTable.id)
 		.notNull(),
 	// AES-256-GCM encrypted TOTP secret

@@ -4,14 +4,11 @@ import {
 	timestamp,
 	varchar,
 	boolean,
-	check,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-import { totpTokenTable } from './totpToken.schema';
-import { linkedOAuthTable } from './linkedOAuth.schema';
+import { UUID } from 'node:crypto';
 
 export const userTable = pgTable('users', {
-	id: uuid('id').primaryKey().defaultRandom(),
+	id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
 	email: varchar('email', { length: 256 }).unique(),
 	emailVerified: boolean('email_verified').notNull().default(false),
 	passwordHash: varchar('password_hash', { length: 512 }),

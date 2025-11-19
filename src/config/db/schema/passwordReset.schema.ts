@@ -1,10 +1,12 @@
 import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { userTable } from './user.schema';
 import { bytea } from './types/bytea';
+import { UUID } from 'node:crypto';
 
 export const passwordResetTable = pgTable('password_resets', {
-	id: uuid('id').primaryKey().defaultRandom(),
+	id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
 	userId: uuid('user_id')
+		.$type<UUID>()
 		.references(() => userTable.id, {
 			onDelete: 'cascade',
 			onUpdate: 'cascade',

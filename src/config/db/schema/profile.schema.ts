@@ -1,9 +1,10 @@
 import { pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import { userTable } from './user.schema';
 import { timestamp } from 'drizzle-orm/pg-core';
+import { UUID } from 'node:crypto';
 
 export const profileTable = pgTable('profiles', {
-	id: uuid('id').primaryKey().defaultRandom(),
+	id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
 	userId: uuid('user_id')
 		.references(() => userTable.id, {
 			onDelete: 'cascade',
