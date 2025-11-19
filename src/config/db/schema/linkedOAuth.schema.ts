@@ -15,7 +15,9 @@ export const linkedOAuthTable = pgTable('linked_oauth', {
 	provider: varchar('provider', { length: 128 })
 		.$type<'google' | 'apple' | 'github'>()
 		.notNull(),
-	providerAccountId: varchar('provider_account_id', { length: 256 }).notNull(),
-	providerEmail: varchar('provider_email', { length: 256 }).notNull(),
+	providerAccountId: varchar('provider_account_id', { length: 256 })
+		.notNull()
+		.unique(),
+	providerEmail: varchar('provider_email', { length: 256 }).notNull().unique(),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
