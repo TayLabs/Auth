@@ -38,7 +38,7 @@ type SignupResBody = ResponseBody<{
 	email: string;
 	firstName: string;
 	lastName: string;
-	userName: string;
+	username: string;
 }>;
 
 export { signupBodySchema as default, type SignupReqBody, type SignupResBody };

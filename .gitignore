@@ -21,8 +21,8 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
+# drizzle-orm migration files
+drizzle/
 
 # IDE files
 .vscode/
