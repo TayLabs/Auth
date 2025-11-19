@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
 import bodyParser from 'body-parser';
+import { express as useragent } from 'express-useragent';
 
 const app = express();
 
@@ -14,6 +15,9 @@ app.use(bodyParser.json());
 // Security middleware
 app.use(helmet());
 app.disable('x-powered-by'); // Disable the 'X-Powered-By' header for security (normally includes framework being used)
+
+// Useragent detection middleware
+app.use(useragent());
 
 // Register routes (anything exported from /*/routes/*.router.ts)
 app.use('/api/v1', authRoutes);

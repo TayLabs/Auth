@@ -1,3 +1,4 @@
+import { type UUID } from 'node:crypto';
 import redisClient from './client';
 
 type Task = () => Promise<void | any>;
@@ -8,20 +9,26 @@ export default class Redis {
 
     return value && (JSON.parse(value) as T);
   }
-  public static set(key: string) {
-    return new RedisInsertQuery(key);
+
+  public static set(userId: UUID) {
+    return new RedisInsertQuery(userId);
   }
+
   public static async delete(key: string) {
     await redisClient.del(key);
+  }
+
+  public static async deleteAll(userId: UUID) {
+    // const keys = await redisClient.scan(0, 'MATCH', `user:${userId}:refresh:*`);
   }
 }
 
 class RedisInsertQuery {
-  private _key: string;
+  private userId: string;
   private _tasks: Task[] = [];
 
-  constructor(key: string) {
-    this._key = key;
+  constructor(userId: string) {
+    this._userId = userId;
   }
 
   public value<T>(value: T) {

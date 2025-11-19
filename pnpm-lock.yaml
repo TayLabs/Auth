@@ -23,6 +23,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      express-useragent:
+        specifier: ^2.0.2
+        version: 2.0.2
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
@@ -45,9 +48,9 @@ importers:
       '@types/express':
         specifier: ^5.0.5
         version: 5.0.5
-      '@types/express-session':
-        specifier: ^1.18.2
-        version: 1.18.2
+      '@types/express-useragent':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
@@ -397,8 +400,8 @@ packages:
   '@types/express-serve-static-core@5.1.0':
     resolution: {integrity: sha512-jnHMsrd0Mwa9Cf4IdOzbz543y4XJepXrbia2T4b6+spXC2We3t1y6K44D3mR8XMFSXMCf3/l7rCgddfx7UNVBA==}
 
-  '@types/express-session@1.18.2':
-    resolution: {integrity: sha512-k+I0BxwVXsnEU2hV77cCobC08kIsn4y44C3gC0b46uxZVMaXA04lSPgRLR/bSL2w0t0ShJiG8o4jPzRG/nscFg==}
+  '@types/express-useragent@1.0.5':
+    resolution: {integrity: sha512-G1zPW6jDj7oGJvMvB8UCIAWznCOafcksYzOg8LINfYmvrXlSGJ6nsJ7O7GlmYMjrgGYvobYaI8IhRCkAKslPJA==}
 
   '@types/express@5.0.5':
     resolution: {integrity: sha512-LuIQOcb6UmnF7C1PCFmEU1u2hmiHL43fgFQX67sN3H4Z+0Yk0Neo++mFsBjhOAuLzvlQeqAAkeDOZrJs9rzumQ==}
@@ -672,6 +675,10 @@ packages:
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
+
+  express-useragent@2.0.2:
+    resolution: {integrity: sha512-STtNWx33HtKbE9Dpe8DTgivEMJIZh2mmFqjq9OhvHEEkB6VVjOTYGrc9djzVN5yW3s245OTDExCLjZ5oEFGp9w==}
+    engines: {node: '>=18'}
 
   express@5.1.0:
     resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
@@ -1249,7 +1256,7 @@ snapshots:
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
 
-  '@types/express-session@1.18.2':
+  '@types/express-useragent@1.0.5':
     dependencies:
       '@types/express': 5.0.5
 
@@ -1482,6 +1489,8 @@ snapshots:
   escape-html@1.0.3: {}
 
   etag@1.8.1: {}
+
+  express-useragent@2.0.2: {}
 
   express@5.1.0:
     dependencies:
