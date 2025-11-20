@@ -27,13 +27,20 @@ const envSchema = z.object({
     .string('Must be a valid string of characters')
     .min(6, 'Must be at least 6 characters long')
     .max(24, 'Must be at most 24 characters long'),
+  ACCESS_TOKEN_TTL: z
+    .string()
+    .regex(
+      /^\d+(m|h)$/,
+      'Must be a valid timespan in minutes or hours (suffix: m | h)'
+    )
+    .default('1h'),
   REFRESH_TOKEN_SECRET: z
     .string('Must be a valid string of characters')
     .min(12, 'Must be at least 12 characters long')
     .max(32, 'Must be at most 32 characters long'),
   REFRESH_TOKEN_TTL: z
     .string()
-    .regex(/^\d+$/, 'Must be a valid length of time (number + d | h | m | s)')
+    .regex(/^\d+(h|d)$/, 'Must be a valid length of days (suffix: d)')
     .default('30d'),
   CHECK_PASSWORD_COMPLEXITY: z
     .string()

@@ -1,4 +1,6 @@
 import redisClient from '@/config/redis/client';
+import env from '@/types/env';
+import parseTTL from './parseTTL';
 
 export interface RefreshTokenData {
   userId: string;
@@ -6,34 +8,29 @@ export interface RefreshTokenData {
   issuedAt: number;
 }
 
-const tokenKey = (tokenId: string) => `refresh:${tokenId}`;
-const userSetKey = (userId: string) => `user:${userId}:refreshTokens`;
-const deviceSetKey = (deviceId: string) => `device:${deviceId}:refreshTokens`;
-
 export class Session {
   /**
    * Store a refresh token
    */
   public static async addToken(tokenId: string, data: RefreshTokenData) {
-    const tokenKey = tokenKey(tokenId);
+    const tokenKey = `refresh${tokenId}`;
 
     await redisClient.hset(tokenKey, {
       userId: data.userId,
       deviceId: data.deviceId,
       issuedAt: data.issuedAt.toString(),
     });
+    await redisClient.expire(tokenKey, parseTTL(env.REFRESH_TOKEN_TTL).seconds);
 
-    await redisClient.expire(tokenKey, ttlSeconds);
-
-    await redisClient.sadd(userSetKey(data.userId), tokenId);
-    await redisClient.sadd(deviceSetKey(data.deviceId), tokenId);
+    await redisClient.sadd(`user:${data.userId}:refreshTokens`, tokenId);
+    await redisClient.sadd(`device:${data.deviceId}:refreshTokens`, tokenId);
   }
 
   /**
    * Delete a single refresh token
    */
   public static async deleteToken(tokenId: string) {
-    const tokenKey = tokenKey(tokenId);
+    const tokenKey = `refresh${tokenId}`;
     const tokenData = await redisClient.hgetall(tokenKey);
 
     if (Object.keys(tokenData).length === 0) {
@@ -41,8 +38,8 @@ export class Session {
     }
 
     const { userId, deviceId } = tokenData;
-    await redisClient.srem(userSetKey(userId), tokenId);
-    await redisClient.srem(deviceSetKey(deviceId), tokenId);
+    await redisClient.srem(`user:${userId}:refreshTokens`, tokenId);
+    await redisClient.srem(`device:${deviceId}:refreshTokens`, tokenId);
 
     await redisClient.del(tokenKey);
   }
@@ -51,7 +48,7 @@ export class Session {
    * Delete all tokens for a user (global logout)
    */
   public static async deleteAllTokensForUser(userId: string) {
-    const userSet = userSetKey(userId);
+    const userSet = `user:${userId}:refreshTokens`;
     const tokenIds = await redisClient.smembers(userSet);
 
     if (tokenIds.length === 0) return;
@@ -59,7 +56,7 @@ export class Session {
     const multi = redisClient.multi();
 
     for (const tokenId of tokenIds) {
-      const tokenKey = tokenKey(tokenId);
+      const tokenKey = `refresh${tokenId}`;
       multi.del(tokenKey);
       multi.srem(userSet, tokenId);
     }
@@ -72,7 +69,7 @@ export class Session {
    * Logout from a specific device
    */
   public static async deleteTokensForDevice(deviceId: string) {
-    const deviceSet = deviceSetKey(deviceId);
+    const deviceSet = `device:${deviceId}:refreshTokens`;
     const tokenIds = await redisClient.smembers(deviceSet);
 
     if (tokenIds.length === 0) return;
@@ -80,7 +77,7 @@ export class Session {
     const multi = redisClient.multi();
 
     for (const tokenId of tokenIds) {
-      const tokenKey = tokenKey(tokenId);
+      const tokenKey = `refresh${tokenId}`;
 
       // First lookup userId OUTSIDE the multi block
       const tokenData = await redisClient.hgetall(tokenKey);
@@ -91,7 +88,7 @@ export class Session {
       multi.srem(deviceSet, tokenId);
 
       if (userId) {
-        multi.srem(userSetKey(userId), tokenId);
+        multi.srem(`user:${userId}:refreshTokens`, tokenId);
       }
     }
 
@@ -105,7 +102,7 @@ export class Session {
    * Validate token & fetch metadata
    */
   async getToken(tokenId: string): Promise<RefreshTokenData | null> {
-    const data = await redisClient.hgetall(tokenKey(tokenId));
+    const data = await redisClient.hgetall(`refresh${tokenId}`);
     if (!data.userId) return null;
 
     return {
