@@ -7,6 +7,10 @@
     "dev": "cross-env NODE_ENV=development tsx src/server.ts",
     "watch": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "db:init": "npx drizzle-kit generate && npx drizzle-kit migrate",
+    "docker:dev:up": "docker compose --profile development up -d",
+    "docker:dev:start": "docker compose --profile development start",
+    "docker:dev:stop": "docker compose --profile development stop",
+    "docker:dev:down": "docker compose --profile development down",
     "build": "tsc",
     "start": "node dist/server.ts"
   },

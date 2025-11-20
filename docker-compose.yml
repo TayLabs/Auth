@@ -1,6 +1,9 @@
+name: taylab-auth
+
 services:
   postgres:
     image: postgres:latest
+    container_name: auth-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: auth
@@ -15,9 +18,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles: ['development', 'production']
 
   redis:
     image: redis:latest
+    container_name: auth-redis
     restart: unless-stopped
     ports:
       - '6313:6379'
@@ -28,6 +33,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles: ['development', 'production']
 
 volumes:
   postgres:
