@@ -3,7 +3,7 @@ import { userTable } from '@/config/db/schema/user.schema';
 import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import { type UUID } from 'node:crypto';
-import Password from './Password.util';
+import { hashPasswordAsync } from './password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
 
 const { passwordHash: _passwordHash, ...userColumns } =
@@ -22,7 +22,7 @@ export default class User {
 		password: string,
 		{ firstName, lastName }: { firstName: string; lastName: string }
 	) {
-		const passwordHash = await Password.hashAsync(password);
+		const passwordHash = await hashPasswordAsync(password);
 
 		return await db.transaction(async (tx) => {
 			try {
