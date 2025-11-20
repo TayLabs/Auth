@@ -5,8 +5,6 @@ import HttpStatus from '@/types/HttpStatus.enum';
 export const loginController = controller<LoginReqBody, LoginResBody>(
   (req, res, _next) => {
     // Login logic here
-    console.log('logging in user');
-    console.log(req.useragent);
 
     res.status(HttpStatus.CREATED).json({
       success: true,

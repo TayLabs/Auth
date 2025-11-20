@@ -1,133 +1,117 @@
 import redisClient from '@/config/redis/client';
 
 export interface RefreshTokenData {
-	userId: string;
-	deviceId: string;
-	issuedAt: number;
+  userId: string;
+  deviceId: string;
+  issuedAt: number;
 }
 
-export class RefreshTokenStore {
-	private client = redisClient;
-	private ttlSeconds: number;
+const tokenKey = (tokenId: string) => `refresh:${tokenId}`;
+const userSetKey = (userId: string) => `user:${userId}:refreshTokens`;
+const deviceSetKey = (deviceId: string) => `device:${deviceId}:refreshTokens`;
 
-	constructor(ttlSeconds = 60 * 60 * 24 * 7) {
-		// default: 7 days
-		this.ttlSeconds = ttlSeconds;
-	}
+export class Session {
+  /**
+   * Store a refresh token
+   */
+  public static async addToken(tokenId: string, data: RefreshTokenData) {
+    const tokenKey = tokenKey(tokenId);
 
-	private tokenKey(tokenId: string) {
-		return `refresh:${tokenId}`;
-	}
+    await redisClient.hset(tokenKey, {
+      userId: data.userId,
+      deviceId: data.deviceId,
+      issuedAt: data.issuedAt.toString(),
+    });
 
-	private userSetKey(userId: string) {
-		return `user:${userId}:refreshTokens`;
-	}
+    await redisClient.expire(tokenKey, ttlSeconds);
 
-	private deviceSetKey(deviceId: string) {
-		return `device:${deviceId}:refreshTokens`;
-	}
+    await redisClient.sadd(userSetKey(data.userId), tokenId);
+    await redisClient.sadd(deviceSetKey(data.deviceId), tokenId);
+  }
 
-	/**
-	 * Store a refresh token
-	 */
-	async addToken(tokenId: string, data: RefreshTokenData) {
-		const tokenKey = this.tokenKey(tokenId);
+  /**
+   * Delete a single refresh token
+   */
+  public static async deleteToken(tokenId: string) {
+    const tokenKey = tokenKey(tokenId);
+    const tokenData = await redisClient.hgetall(tokenKey);
 
-		await this.client.hset(tokenKey, {
-			userId: data.userId,
-			deviceId: data.deviceId,
-			issuedAt: data.issuedAt.toString(),
-		});
+    if (Object.keys(tokenData).length === 0) {
+      return; // already deleted or expired
+    }
 
-		await this.client.expire(tokenKey, this.ttlSeconds);
+    const { userId, deviceId } = tokenData;
+    await redisClient.srem(userSetKey(userId), tokenId);
+    await redisClient.srem(deviceSetKey(deviceId), tokenId);
 
-		await this.client.sadd(this.userSetKey(data.userId), tokenId);
-		await this.client.sadd(this.deviceSetKey(data.deviceId), tokenId);
-	}
+    await redisClient.del(tokenKey);
+  }
 
-	/**
-	 * Delete a single refresh token
-	 */
-	async deleteToken(tokenId: string) {
-		const tokenKey = this.tokenKey(tokenId);
-		const tokenData = await this.client.hgetall(tokenKey);
+  /**
+   * Delete all tokens for a user (global logout)
+   */
+  public static async deleteAllTokensForUser(userId: string) {
+    const userSet = userSetKey(userId);
+    const tokenIds = await redisClient.smembers(userSet);
 
-		if (Object.keys(tokenData).length === 0) {
-			return; // already deleted or expired
-		}
+    if (tokenIds.length === 0) return;
 
-		const { userId, deviceId } = tokenData;
-		await this.client.srem(this.userSetKey(userId), tokenId);
-		await this.client.srem(this.deviceSetKey(deviceId), tokenId);
+    const multi = redisClient.multi();
 
-		await this.client.del(tokenKey);
-	}
+    for (const tokenId of tokenIds) {
+      const tokenKey = tokenKey(tokenId);
+      multi.del(tokenKey);
+      multi.srem(userSet, tokenId);
+    }
 
-	/**
-	 * Delete all tokens for a user (global logout)
-	 */
-	async deleteAllTokensForUser(userId: string) {
-		const userSet = this.userSetKey(userId);
-		const tokenIds = await this.client.smembers(userSet);
+    multi.del(userSet);
+    await multi.exec();
+  }
 
-		if (tokenIds.length === 0) return;
+  /**
+   * Logout from a specific device
+   */
+  public static async deleteTokensForDevice(deviceId: string) {
+    const deviceSet = deviceSetKey(deviceId);
+    const tokenIds = await redisClient.smembers(deviceSet);
 
-		const multi = this.client.multi();
+    if (tokenIds.length === 0) return;
 
-		for (const tokenId of tokenIds) {
-			const tokenKey = this.tokenKey(tokenId);
-			multi.del(tokenKey);
-			multi.srem(userSet, tokenId);
-		}
+    const multi = redisClient.multi();
 
-		multi.del(userSet);
-		await multi.exec();
-	}
+    for (const tokenId of tokenIds) {
+      const tokenKey = tokenKey(tokenId);
 
-	/**
-	 * Logout from a specific device
-	 */
-	async deleteTokensForDevice(deviceId: string) {
-		const deviceSet = this.deviceSetKey(deviceId);
-		const tokenIds = await this.client.smembers(deviceSet);
+      // First lookup userId OUTSIDE the multi block
+      const tokenData = await redisClient.hgetall(tokenKey);
+      const userId = tokenData.userId;
 
-		if (tokenIds.length === 0) return;
+      // Queue deletions
+      multi.del(tokenKey);
+      multi.srem(deviceSet, tokenId);
 
-		const multi = this.client.multi();
+      if (userId) {
+        multi.srem(userSetKey(userId), tokenId);
+      }
+    }
 
-		for (const tokenId of tokenIds) {
-			const tokenKey = this.tokenKey(tokenId);
+    // Finally clear the device set
+    multi.del(deviceSet);
 
-			// First lookup userId OUTSIDE the multi block
-			const tokenData = await this.client.hgetall(tokenKey);
-			const userId = tokenData.userId;
+    await multi.exec();
+  }
 
-			// Queue deletions
-			multi.del(tokenKey);
-			multi.srem(deviceSet, tokenId);
+  /**
+   * Validate token & fetch metadata
+   */
+  async getToken(tokenId: string): Promise<RefreshTokenData | null> {
+    const data = await redisClient.hgetall(tokenKey(tokenId));
+    if (!data.userId) return null;
 
-			if (userId) {
-				multi.srem(this.userSetKey(userId), tokenId);
-			}
-		}
-
-		// Finally clear the device set
-		multi.del(deviceSet);
-
-		await multi.exec();
-	}
-
-	/**
-	 * Validate token & fetch metadata
-	 */
-	async getToken(tokenId: string): Promise<RefreshTokenData | null> {
-		const data = await this.client.hgetall(this.tokenKey(tokenId));
-		if (!data.userId) return null;
-
-		return {
-			userId: data.userId,
-			deviceId: data.deviceId,
-			issuedAt: Number(data.issuedAt),
-		};
-	}
+    return {
+      userId: data.userId,
+      deviceId: data.deviceId,
+      issuedAt: Number(data.issuedAt),
+    };
+  }
 }

@@ -31,6 +31,10 @@ const envSchema = z.object({
     .string('Must be a valid string of characters')
     .min(12, 'Must be at least 12 characters long')
     .max(32, 'Must be at most 32 characters long'),
+  REFRESH_TOKEN_TTL: z
+    .string()
+    .regex(/^\d+$/, 'Must be a valid length of time (number + d | h | m | s)')
+    .default('30d'),
   CHECK_PASSWORD_COMPLEXITY: z
     .string()
     .regex(/^(true|false)$/, 'Must be true or false')
