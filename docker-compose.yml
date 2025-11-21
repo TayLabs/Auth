@@ -38,7 +38,7 @@ services:
   cronjob:
     build:
       context: .
-      dockerfile: src/workers/sessionCleanup/Dockerfile
+      dockerfile: Dockerfile.SessionCleanup
     container_name: auth-session-cleanup
     restart: unless-stopped
     depends_on:
