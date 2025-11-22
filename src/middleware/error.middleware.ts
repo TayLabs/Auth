@@ -16,9 +16,7 @@ export const errorHandler: ErrorRequestHandler<{}, ResponseBody> = (
 		console.error(
 			err instanceof Error
 				? {
-						statusCode: err instanceof AppError ? err.statusCode : 500,
 						message: err.message,
-						stack: err.stack,
 				  }
 				: err
 		);
