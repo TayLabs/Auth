@@ -5,12 +5,24 @@ import { errorHandler } from './middleware/error.middleware';
 import { notFoundHandler } from './middleware/notFound.middleware';
 import bodyParser from 'body-parser';
 import { express as useragent } from 'express-useragent';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const app = express();
+
+// CORS
+app.use(
+	cors({
+		origin: true,
+		credentials: true,
+	})
+);
 
 // Parse application/x-www-form-urlencoded and application/json requests
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+// Parse cookies into more usable format
+app.use(cookieParser());
 
 // Security middleware
 app.use(helmet());

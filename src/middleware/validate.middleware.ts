@@ -13,7 +13,6 @@ export function validate<T extends z.ZodObject>(
 		} catch (err) {
 			if (err instanceof z.ZodError) {
 				const errorTree = z.treeifyError<T>(err as z.ZodError<T>).properties;
-
 				return res.status(400).json({
 					success: false,
 					message: errorTree
