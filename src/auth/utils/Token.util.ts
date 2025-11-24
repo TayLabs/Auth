@@ -40,11 +40,11 @@ export default class Token {
 	 * @returns string
 	 */
 	public async create(
-		userId: UUID,
-		deviceId?: UUID
+		userId: UUID
 	): Promise<{ accessToken: string; refreshToken: string; deviceId: UUID }> {
 		let sessionId = randomBytes(16).toString('hex'); // len: 32
 		const refreshTokenId = randomBytes(8).toString('hex'); // len: 16
+		const deviceId = this._req.cookies['_d_identifier'] as UUID | undefined;
 
 		// Add log for device's token session
 		const deviceRecord = (
@@ -53,7 +53,7 @@ export default class Token {
 				.values({
 					userId,
 					sessionId,
-					deviceId,
+					deviceId, // If no device id is specified (undefined) then it will be auto generated
 					device: {
 						ipAddress: parseDeviceIP(this._req),
 						deviceType: parseDeviceType(this._req.useragent),

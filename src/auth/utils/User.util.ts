@@ -2,27 +2,36 @@ import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
 import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
-import { type UUID } from 'node:crypto';
-import { hashPasswordAsync } from './password.util';
+import Password from './Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
+import type { User as UserType } from '@/auth/interfaces/user.interface';
 
 const { passwordHash: _passwordHash, ...userColumns } =
 	getTableColumns(userTable);
 const { userId: _userId, ...profileColumns } = getTableColumns(profileTable);
 
 export default class User {
-	public static async getAsync(userId: UUID) {
-		return await db.query.userTable.findFirst({
-			where: (userTable) => eq(userTable.id, userId),
-		});
+	public static async login(email: string, password: string) {
+		const user = (
+			await db.select().from(userTable).where(eq(userTable.email, email))
+		)[0];
+
+		await Password.verifyAsync(user.passwordHash, password); // throws error if invalid
+
+		// Remove password hash from user object before returning
+		const result: Omit<typeof userTable.$inferInsert, 'passwordHash'> &
+			Partial<Pick<typeof userTable.$inferInsert, 'passwordHash'>> = user;
+		delete result.passwordHash;
+
+		return result as UserType;
 	}
 
-	public static async createAsync(
+	public static async create(
 		email: string,
 		password: string,
 		{ firstName, lastName }: { firstName: string; lastName: string }
 	) {
-		const passwordHash = await hashPasswordAsync(password);
+		const passwordHash = await Password.hashAsync(password);
 
 		return await db.transaction(async (tx) => {
 			try {
