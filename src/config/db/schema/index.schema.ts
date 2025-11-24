@@ -1,4 +1,5 @@
 // users and auth
+export * from './device.schema';
 export * from './user.schema';
 export * from './linkedOAuth.schema';
 export * from './passwordReset.schema';

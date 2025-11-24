@@ -2,9 +2,10 @@ import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
 import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
-import Password from './Password.util';
+import Password from '../utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
 import type { User as UserType } from '@/auth/interfaces/user.interface';
+import AppError from '@/types/AppError';
 
 const { passwordHash: _passwordHash, ...userColumns } =
 	getTableColumns(userTable);
@@ -13,14 +14,19 @@ const { userId: _userId, ...profileColumns } = getTableColumns(profileTable);
 export default class User {
 	public static async login(email: string, password: string) {
 		const user = (
-			await db.select().from(userTable).where(eq(userTable.email, email))
+			await db
+				.select({ ...getTableColumns(userTable), profile: profileColumns })
+				.from(userTable)
+				.innerJoin(profileTable, eq(profileTable.userId, userTable.id))
+				.where(eq(userTable.email, email))
 		)[0];
 
-		await Password.verifyAsync(user.passwordHash, password); // throws error if invalid
+		if (!(await Password.verifyAsync(user.passwordHash, password))) {
+			throw new AppError('Invalid Password', 401);
+		}
 
 		// Remove password hash from user object before returning
-		const result: Omit<typeof userTable.$inferInsert, 'passwordHash'> &
-			Partial<Pick<typeof userTable.$inferInsert, 'passwordHash'>> = user;
+		const result: UserType = user;
 		delete result.passwordHash;
 
 		return result as UserType;

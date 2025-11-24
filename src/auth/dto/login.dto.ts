@@ -9,11 +9,14 @@ const loginBodySchema = z.object({
 
 type LoginReqBody = z.infer<typeof loginBodySchema>;
 type LoginResBody = ResponseBody<{
-	userId: UUID;
-	email: string;
-	firstName: string;
-	lastName: string;
-	userName: string;
+	user: {
+		id: UUID;
+		email: string;
+		firstName: string;
+		lastName: string;
+		userName: string;
+	};
+	accessToken: string;
 }>;
 
 export { loginBodySchema as default, type LoginReqBody, type LoginResBody };

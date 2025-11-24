@@ -38,6 +38,7 @@ export const deviceTable = pgTable(
 			.notNull()
 			.default('active'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
+		lastUsedAt: timestamp('last_used_at').notNull().defaultNow(),
 	},
 	(table) => [
 		unique('unique_user_id_and_device_id').on(table.userId, table.deviceId),

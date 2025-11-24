@@ -1,11 +1,15 @@
-import { UUID } from 'node:crypto';
+import type { UUID } from 'node:crypto';
+import type { Profile } from './profile.interface';
 
 export type User = {
 	id: UUID;
 	email: string;
 	emailVerified: boolean;
-	phoneNumber?: string;
-	phoneNumberVerified: boolean;
+	passwordHash?: string;
+	phoneNumber: string | null;
+	phone2faEnabled: boolean;
 	totpEnabled: boolean;
 	createdAt: Date;
+	lastUsedAt: Date | null;
+	profile: Profile;
 };

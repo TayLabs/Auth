@@ -34,11 +34,14 @@ const signupBodySchema = z
 
 type SignupReqBody = z.infer<typeof signupBodySchema>;
 type SignupResBody = ResponseBody<{
-	userId: UUID;
-	email: string;
-	firstName: string;
-	lastName: string;
-	username: string;
+	user: {
+		id: UUID;
+		email: string;
+		firstName: string;
+		lastName: string;
+		username: string;
+	};
+	accessToken: string;
 }>;
 
 export { signupBodySchema as default, type SignupReqBody, type SignupResBody };

@@ -2,8 +2,9 @@ import { controller } from '@/middleware/controller.middleware';
 import HttpStatus from '@/types/HttpStatus.enum';
 import type { LoginReqBody, LoginResBody } from '../dto/login.dto';
 import type { SignupReqBody, SignupResBody } from '../dto/signup.dto';
-import User from '../utils/User.util';
-import Token from '../utils/Token.util';
+import type { RefreshReqBody, RefreshResBody } from '../dto/refresh.dto';
+import User from '../services/User.service';
+import Token from '../services/Token.service';
 
 // /auth/login
 export const loginController = controller<LoginReqBody, LoginResBody>(
@@ -12,20 +13,19 @@ export const loginController = controller<LoginReqBody, LoginResBody>(
 		const user = await User.login(req.body.email, req.body.password);
 
 		// Issue new tokens
-		const { accessToken, refreshToken, deviceId } = await new Token(req).create(
-			user.id
-		);
-
-		// TODO: set cookies with request objects, also move cookie names to constants
+		const { accessToken } = await new Token(req, res).create(user.id);
 
 		res.status(HttpStatus.OK).json({
 			success: true,
 			data: {
-				userId: '00000000-0000-0000-0000-000000000000',
-				email: req.body.email,
-				firstName: 'John',
-				lastName: 'Doe',
-				userName: req.body.email.split('@')[0],
+				user: {
+					id: user.id,
+					email: user.email,
+					firstName: user.profile.firstName,
+					lastName: user.profile.lastName,
+					userName: user.profile.username,
+				},
+				accessToken,
 			},
 		});
 	}
@@ -39,14 +39,32 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
 			lastName: req.body.lastName,
 		});
 
+		const { accessToken } = await new Token(req, res).create(user.id);
+
 		res.status(HttpStatus.CREATED).json({
 			success: true,
 			data: {
-				userId: user.id,
-				email: user.email,
-				firstName: user.profile.firstName,
-				lastName: user.profile.lastName,
-				username: user.profile.username,
+				user: {
+					id: user.id,
+					email: user.email,
+					firstName: user.profile.firstName,
+					lastName: user.profile.lastName,
+					username: user.profile.username,
+				},
+				accessToken,
+			},
+		});
+	}
+);
+
+export const refreshController = controller<RefreshReqBody, RefreshResBody>(
+	async (req, res, _next) => {
+		const { accessToken } = await new Token(req, res).refresh();
+
+		res.status(HttpStatus.OK).json({
+			success: true,
+			data: {
+				accessToken,
 			},
 		});
 	}

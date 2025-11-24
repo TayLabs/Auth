@@ -3,14 +3,21 @@ import { randomBytes, type UUID } from 'node:crypto';
 import HttpStatus from '@/types/HttpStatus.enum';
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import env from '@/types/env';
-import parseTTL from './parseTTL.utils';
-import type { Request } from 'express';
+import parseTTL from '../utils/parseTTL.utils';
+import type { Request, Response } from 'express';
 import { db } from '@/config/db';
 import { deviceTable } from '@/config/db/schema/device.schema';
-import { parseDeviceIP, parseDeviceType } from './device.utils';
+import { parseDeviceIP, parseDeviceType } from '../utils/device.utils';
 import redisClient from '@/config/redis/client';
-import { eq } from 'drizzle-orm';
+import { DrizzleQueryError, eq } from 'drizzle-orm';
 import { DeviceType, IPAddress } from '@/types/DeviceType';
+import { DatabaseError } from 'pg';
+import {
+	accessTokenCookie,
+	deviceCookie,
+	selectedSessionCookie,
+	sessionCookie,
+} from '../constants/cookies';
 
 export type RefreshTokenPayload = {
 	rid: string;
@@ -28,9 +35,11 @@ export type AccessTokenPayload = {
 
 export default class Token {
 	private _req;
+	private _res;
 
-	constructor(req: Request) {
+	constructor(req: Request, res: Response) {
 		this._req = req;
+		this._res = res;
 	}
 
 	/**
@@ -39,38 +48,23 @@ export default class Token {
 	 * @param deviceId UUID Stored in cookie so each device has a unique identifier
 	 * @returns string
 	 */
-	public async create(
-		userId: UUID
-	): Promise<{ accessToken: string; refreshToken: string; deviceId: UUID }> {
-		let sessionId = randomBytes(16).toString('hex'); // len: 32
-		const refreshTokenId = randomBytes(8).toString('hex'); // len: 16
-		const deviceId = this._req.cookies['_d_identifier'] as UUID | undefined;
+	public async create(userId: UUID): Promise<{
+		accessToken: string;
+	}> {
+		try {
+			let sessionId = randomBytes(16).toString('hex'); // len: 32
+			const refreshTokenId = randomBytes(8).toString('hex'); // len: 16
+			const deviceId = this._req.cookies[deviceCookie.name] as UUID | undefined;
 
-		// Add log for device's token session
-		const deviceRecord = (
-			await db
-				.insert(deviceTable)
-				.values({
-					userId,
-					sessionId,
-					deviceId, // If no device id is specified (undefined) then it will be auto generated
-					device: {
-						ipAddress: parseDeviceIP(this._req),
-						deviceType: parseDeviceType(this._req.useragent),
-						browser: this._req.useragent?.browser,
-						version: this._req.useragent?.version.toString(),
-						os: this._req.useragent?.os,
-						platform: this._req.useragent?.platform,
-						source: this._req.useragent?.source,
-					},
-				})
-				.onConflictDoUpdate({
-					// If there's already a record for that device and user, update the record
-					target: [deviceTable.userId, deviceTable.deviceId],
-					set: {
+			// Add log for device's token session
+			const deviceRecord = (
+				await db
+					.insert(deviceTable)
+					.values({
+						userId,
 						sessionId,
+						deviceId, // If no device id is specified (undefined) then it will be auto generated
 						device: {
-							// Shouldn't change, just incase there's an os update of any sort
 							ipAddress: parseDeviceIP(this._req),
 							deviceType: parseDeviceType(this._req.useragent),
 							browser: this._req.useragent?.browser,
@@ -79,58 +73,120 @@ export default class Token {
 							platform: this._req.useragent?.platform,
 							source: this._req.useragent?.source,
 						},
-					},
-				})
-				.returning()
-		)?.[0];
+					})
+					.onConflictDoUpdate({
+						// If there's already a record for that device and user, update the record
+						target: [deviceTable.userId, deviceTable.deviceId],
+						set: {
+							sessionId,
+							device: {
+								// Shouldn't change, just incase there's an os update of any sort
+								ipAddress: parseDeviceIP(this._req),
+								deviceType: parseDeviceType(this._req.useragent),
+								browser: this._req.useragent?.browser,
+								version: this._req.useragent?.version.toString(),
+								os: this._req.useragent?.os,
+								platform: this._req.useragent?.platform,
+								source: this._req.useragent?.source,
+							},
+							lastUsedAt: new Date(),
+						},
+					})
+					.returning()
+			)?.[0];
 
-		// Register refresh token in redis whitelist
-		const sessionKey = `session:${sessionId}`;
-		await redisClient.hset(sessionKey, {
-			rid: refreshTokenId,
-			device: JSON.stringify({
-				// Log for validation and to prevent token theft if possible
-				id: deviceRecord.id,
-				deviceType: deviceRecord.device.deviceType,
-				ipAddress: deviceRecord.device.ipAddress,
-			}),
-			lastUsedAt: Date.now().toString(),
-		});
-		await redisClient.expire(
-			sessionKey,
-			parseTTL(env.REFRESH_TOKEN_TTL).seconds
-		);
+			if (deviceId !== deviceRecord.deviceId) {
+				this._res.cookie(
+					deviceCookie.name,
+					deviceRecord.deviceId,
+					deviceCookie.options
+				);
+			}
 
-		// Create Refresh JWT
-		const refreshToken = jwt.sign(
-			{
+			// Register refresh token in redis whitelist
+			const sessionKey = `session:${sessionId}`;
+			await redisClient.hset(sessionKey, {
 				rid: refreshTokenId,
-				userId,
-				deviceId: deviceRecord.id,
-				issuedAt: Date.now(),
-			} satisfies RefreshTokenPayload,
-			env.REFRESH_TOKEN_SECRET,
-			{
-				expiresIn: parseTTL(env.REFRESH_TOKEN_TTL).seconds,
-			}
-		);
+				device: JSON.stringify({
+					// Log for validation and to prevent token theft if possible
+					id: deviceRecord.id,
+					deviceType: deviceRecord.device.deviceType,
+					ipAddress: deviceRecord.device.ipAddress,
+				}),
+				lastUsedAt: Date.now().toString(),
+			});
+			await redisClient.expire(
+				sessionKey,
+				parseTTL(env.REFRESH_TOKEN_TTL).seconds
+			);
 
-		// Create Access JWT
-		const accessToken = jwt.sign(
-			{
-				userId,
-				issuer: 'This apis hostname',
-				audience: 'taylab-services',
-				scopes: ['user.read'], // TODO: Add permissions that the user has (based on db once implemented)
-				issuedAt: Date.now(),
-			} satisfies AccessTokenPayload,
-			env.ACCESS_TOKEN_SECRET,
-			{
-				expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
-			}
-		);
+			// Create Refresh JWT
+			const refreshToken = jwt.sign(
+				{
+					rid: refreshTokenId,
+					userId,
+					deviceId: deviceRecord.id,
+					issuedAt: Date.now(),
+				} satisfies RefreshTokenPayload,
+				env.REFRESH_TOKEN_SECRET,
+				{
+					expiresIn: parseTTL(env.REFRESH_TOKEN_TTL).seconds,
+				}
+			);
+			this._res.cookie(
+				selectedSessionCookie.name,
+				sessionId,
+				selectedSessionCookie.options
+			);
+			this._res.cookie(
+				sessionCookie.name(sessionId),
+				refreshToken,
+				sessionCookie.options
+			);
 
-		return { accessToken, refreshToken, deviceId: deviceRecord.id };
+			// Create Access JWT
+			const accessToken = jwt.sign(
+				{
+					userId,
+					issuer: 'This apis hostname',
+					audience: 'taylab-services',
+					scopes: ['user.read'], // TODO: Add permissions that the user has (based on db once implemented)
+					issuedAt: Date.now(),
+				} satisfies AccessTokenPayload,
+				env.ACCESS_TOKEN_SECRET,
+				{
+					expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
+				}
+			);
+			this._res.cookie(
+				accessTokenCookie.name,
+				accessToken,
+				accessTokenCookie.options
+			);
+
+			return {
+				accessToken,
+			};
+		} catch (err) {
+			if (
+				err instanceof DrizzleQueryError &&
+				err.cause instanceof DatabaseError
+			) {
+				switch (err.cause.code) {
+					// case '23505': // unique_violation
+					// 	throw new Error('Unique violation', ); // Should occur as .onConflictUpdate exist
+					case '42P01': // undefined_table
+						throw new AppError(
+							'Database table not found',
+							HttpStatus.INTERNAL_SERVER_ERROR
+						);
+					default:
+						throw err;
+				}
+			} else {
+				throw err;
+			}
+		}
 	}
 
 	/**
@@ -138,13 +194,12 @@ export default class Token {
 	 */
 	public async refresh(): Promise<{
 		accessToken: string;
-		refreshToken: string;
 	}> {
-		const sessionId = this._req.cookies['_selected_s'] as string;
+		const sessionId = this._req.cookies[selectedSessionCookie.name] as string;
 		const sessionKey = `session:${sessionId}`;
 		// Validate the old refresh token
-		const token = this._req.cookies[`_s_${sessionId}`] as string;
-		const deviceId = this._req.cookies['_d_identifier'] as UUID;
+		const token = this._req.cookies[sessionCookie.name(sessionId)] as string;
+		const deviceId = this._req.cookies[deviceCookie.name] as UUID;
 		const decodedToken = jwt.verify(
 			token,
 			env.REFRESH_TOKEN_SECRET
@@ -194,6 +249,11 @@ export default class Token {
 				expiresIn: parseTTL(env.REFRESH_TOKEN_TTL).seconds,
 			}
 		);
+		this._res.cookie(
+			sessionCookie.name(sessionId),
+			newRefreshToken,
+			sessionCookie.options
+		);
 
 		const newAccessToken = jwt.sign(
 			{
@@ -208,10 +268,14 @@ export default class Token {
 				expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
 			}
 		);
+		this._res.cookie(
+			accessTokenCookie.name,
+			newAccessToken,
+			accessTokenCookie.options
+		);
 
 		return {
 			accessToken: newAccessToken,
-			refreshToken: newRefreshToken,
 		};
 	}
 
