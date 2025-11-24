@@ -1,7 +1,7 @@
 import { type ResponseBody } from '@/types/ResponseBody';
 import z from 'zod';
 
-const refreshBodySchema = z.object({});
+const refreshBodySchema = z.undefined();
 
 type RefreshReqBody = z.infer<typeof refreshBodySchema>;
 type RefreshResBody = ResponseBody<{

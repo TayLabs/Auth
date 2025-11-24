@@ -7,7 +7,7 @@ import { RequestHandler } from 'express';
  * @returns A request handler function with proper typing and error handling
  */
 export function controller<
-	ReqBody extends {},
+	ReqBody extends {} | undefined,
 	ResBody extends ResponseBody,
 	Params extends Record<string, any> = {},
 	Query extends Record<string, any> = {}
