@@ -3,7 +3,10 @@ import HttpStatus from '@/types/HttpStatus.enum';
 import type { LoginReqBody, LoginResBody } from '../dto/login.dto';
 import type { SignupReqBody, SignupResBody } from '../dto/signup.dto';
 import type { RefreshReqBody, RefreshResBody } from '../dto/refresh.dto';
-import type { TOTPReqBody, TOTPResBody } from '../dto/totp.dto';
+import type {
+	TOTPCreateReqBody,
+	TOTPCreateResBody,
+} from '../dto/totpCreate.dto';
 import User from '../services/User.service';
 import Token from '../services/Token.service';
 import TOTP from '../services/TOTP.service';
@@ -74,19 +77,20 @@ export const refreshController = controller<RefreshReqBody, RefreshResBody>(
 	}
 );
 
-export const totpCreateController = controller<TOTPReqBody, TOTPResBody>(
-	async (req, res, _next) => {
-		const { totpTokenRecord, qrCode } = await new TOTP(req.user.id).create();
+export const totpCreateController = controller<
+	TOTPCreateReqBody,
+	TOTPCreateResBody
+>(async (req, res, _next) => {
+	const { totpTokenRecord, qrCode } = await new TOTP(req.user.id).create();
 
-		const { accessToken } = await new Token(req, res).create(req.user.id);
+	const { accessToken } = await new Token(req, res).create(req.user.id);
 
-		res.status(HttpStatus.OK).json({
-			success: true,
-			data: {
-				totpTokenRecord,
-				qrCode,
-				accessToken,
-			},
-		});
-	}
-);
+	res.status(HttpStatus.OK).json({
+		success: true,
+		data: {
+			totpTokenRecord,
+			qrCode,
+			accessToken,
+		},
+	});
+});
