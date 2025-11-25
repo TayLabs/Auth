@@ -25,15 +25,17 @@ export default class TOTP {
 
 		const { encryptedSecret, encryptionAuthTag, encryptionIv, ...columns } =
 			getTableColumns(totpTokenTable);
-		const totpTokenRecord = await db
-			.insert(totpTokenTable)
-			.values({
-				userId: this._userId,
-				encryptedSecret: content,
-				encryptionIv: iv,
-				encryptionAuthTag: authTag,
-			})
-			.returning(columns);
+		const totpTokenRecord = (
+			await db
+				.insert(totpTokenTable)
+				.values({
+					userId: this._userId,
+					encryptedSecret: content,
+					encryptionIv: iv,
+					encryptionAuthTag: authTag,
+				})
+				.returning(columns)
+		)[0];
 
 		return {
 			totpTokenRecord,
@@ -67,10 +69,16 @@ export default class TOTP {
 			}
 		}
 
-		if (!matchId) throw new AppError('Invalid code', HttpStatus.BAD_REQUEST);
-		else
+		if (!matchId) {
+			throw new AppError('Invalid code', HttpStatus.BAD_REQUEST);
+		} else {
 			return {
 				id: matchId,
 			};
+		}
+	}
+
+	public async remove(totpTokenId: UUID) {
+		await db.delete(totpTokenTable).where(eq(totpTokenTable.id, totpTokenId));
 	}
 }

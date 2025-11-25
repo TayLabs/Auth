@@ -14,8 +14,10 @@ export const loginController = controller<LoginReqBody, LoginResBody>(
 		// Login logic here
 		const user = await User.login(req.body.email, req.body.password);
 
-		// Issue new tokens
-		const { accessToken } = await new Token(req, res).create(user.id);
+		// Issue new tokens (partial if 2fa is enabled)
+		const { accessToken } = user.totpEnabled
+			? await new Token(req, res).createPartial(user.id, '2fa')
+			: await new Token(req, res).create(user.id);
 
 		res.status(HttpStatus.OK).json({
 			success: true,
@@ -74,15 +76,16 @@ export const refreshController = controller<RefreshReqBody, RefreshResBody>(
 
 export const totpCreateController = controller<TOTPReqBody, TOTPResBody>(
 	async (req, res, _next) => {
-		const { code } = req.body;
+		const { totpTokenRecord, qrCode } = await new TOTP(req.user.id).create();
 
-		// verify code
-		new TOTP(req.user.id);
+		const { accessToken } = await new Token(req, res).create(req.user.id);
 
 		res.status(HttpStatus.OK).json({
 			success: true,
 			data: {
-				accessToken: '',
+				totpTokenRecord,
+				qrCode,
+				accessToken,
 			},
 		});
 	}
