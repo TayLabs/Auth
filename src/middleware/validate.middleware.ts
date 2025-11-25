@@ -2,7 +2,7 @@ import { ResponseBody } from '@/types/ResponseBody';
 import { type RequestHandler } from 'express';
 import z from 'zod';
 
-export function validate<T extends z.ZodObject>(
+export function validate<T extends z.ZodType>(
 	schema: T
 ): RequestHandler<{}, ResponseBody> {
 	return async (req, res, next) => {
