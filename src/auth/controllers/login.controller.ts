@@ -3,8 +3,10 @@ import HttpStatus from '@/types/HttpStatus.enum';
 import type { LoginReqBody, LoginResBody } from '../dto/login.dto';
 import type { SignupReqBody, SignupResBody } from '../dto/signup.dto';
 import type { RefreshReqBody, RefreshResBody } from '../dto/refresh.dto';
+import type { TOTPReqBody, TOTPResBody } from '../dto/totp.dto';
 import User from '../services/User.service';
 import Token from '../services/Token.service';
+import TOTP from '../services/TOTP.service';
 
 // /auth/login
 export const loginController = controller<LoginReqBody, LoginResBody>(
@@ -65,6 +67,22 @@ export const refreshController = controller<RefreshReqBody, RefreshResBody>(
 			success: true,
 			data: {
 				accessToken,
+			},
+		});
+	}
+);
+
+export const totpCreateController = controller<TOTPReqBody, TOTPResBody>(
+	async (req, res, _next) => {
+		const { code } = req.body;
+
+		// verify code
+		new TOTP(req.user.id);
+
+		res.status(HttpStatus.OK).json({
+			success: true,
+			data: {
+				accessToken: '',
 			},
 		});
 	}

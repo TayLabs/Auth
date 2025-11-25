@@ -21,17 +21,28 @@ import {
 
 export type RefreshTokenPayload = {
 	rid: string;
-	userId: string;
-	deviceId: string;
+	userId: UUID;
+	deviceId: UUID;
 	issuedAt: number;
 };
-export type AccessTokenPayload = {
-	userId: string;
-	issuer: string;
-	audience: string;
-	scopes: string[];
-	issuedAt: number;
-};
+
+export type PartialTokenClaim = '2fa' | 'passwordReset';
+export type AccessTokenPayload =
+	| {
+			claim: 'full';
+			userId: UUID;
+			issuer: string;
+			audience: string;
+			scopes: string[];
+			issuedAt: number;
+	  }
+	| {
+			claim: PartialTokenClaim;
+			userId: UUID;
+			issuer: string;
+			audience: string;
+			issuedAt: number;
+	  };
 
 export default class Token {
 	private _req;
@@ -109,7 +120,7 @@ export default class Token {
 				rid: refreshTokenId,
 				device: JSON.stringify({
 					// Log for validation and to prevent token theft if possible
-					id: deviceRecord.id,
+					id: deviceRecord.deviceId,
 					deviceType: deviceRecord.device.deviceType,
 					ipAddress: deviceRecord.device.ipAddress,
 				}),
@@ -125,7 +136,7 @@ export default class Token {
 				{
 					rid: refreshTokenId,
 					userId,
-					deviceId: deviceRecord.id,
+					deviceId: deviceRecord.deviceId,
 					issuedAt: Date.now(),
 				} satisfies RefreshTokenPayload,
 				env.REFRESH_TOKEN_SECRET,
@@ -147,6 +158,7 @@ export default class Token {
 			// Create Access JWT
 			const accessToken = jwt.sign(
 				{
+					claim: 'full',
 					userId,
 					issuer: 'This apis hostname',
 					audience: 'taylab-services',
@@ -189,6 +201,32 @@ export default class Token {
 		}
 	}
 
+	public async createPartial(userId: UUID, claim: PartialTokenClaim) {
+		// Create Access JWT
+		const accessToken = jwt.sign(
+			{
+				claim: claim,
+				userId,
+				issuer: 'This apis hostname',
+				audience: 'taylab-services',
+				issuedAt: Date.now(),
+			} satisfies AccessTokenPayload,
+			env.ACCESS_TOKEN_SECRET,
+			{
+				expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
+			}
+		);
+		this._res.cookie(
+			accessTokenCookie.name,
+			accessToken,
+			accessTokenCookie.options
+		);
+
+		return {
+			accessToken,
+		};
+	}
+
 	/**
 	 * @description Refresh both the access and refresh tokens
 	 */
@@ -197,6 +235,7 @@ export default class Token {
 	}> {
 		const sessionId = this._req.cookies[selectedSessionCookie.name] as string;
 		const sessionKey = `session:${sessionId}`;
+
 		// Validate the old refresh token
 		const token = this._req.cookies[sessionCookie.name(sessionId)] as string;
 		const deviceId = this._req.cookies[deviceCookie.name] as UUID;
@@ -204,6 +243,8 @@ export default class Token {
 			token,
 			env.REFRESH_TOKEN_SECRET
 		) as RefreshTokenPayload;
+
+		// Fetch session record from Redis
 		const sessionRecord = await redisClient.hgetall(sessionKey);
 		const session = {
 			rid: sessionRecord.rid,
@@ -215,7 +256,7 @@ export default class Token {
 			lastUsedAt: Number(sessionRecord.lastUsedAt),
 		};
 
-		// If refresh token id is whitelisted, and device id's match token is valid
+		// If refresh token id is whitelisted with matching device IDs, token is valid
 		if (session.rid !== decodedToken.rid || session.device.id !== deviceId) {
 			throw new AppError(
 				'Invalid token, please login again',
@@ -257,6 +298,7 @@ export default class Token {
 
 		const newAccessToken = jwt.sign(
 			{
+				claim: 'full',
 				userId: decodedToken.userId,
 				issuer: 'This apis hostname',
 				audience: 'taylab-services',
@@ -284,19 +326,39 @@ export default class Token {
 	 * @param token string
 	 * @returns AccessTokenPayload
 	 */
-	public verify(accessToken: string) {
+	public verify(accessToken: string): AccessTokenPayload {
 		try {
 			const decodedToken = jwt.verify(
 				accessToken,
 				env.ACCESS_TOKEN_SECRET
 			) as AccessTokenPayload;
 
+			if (decodedToken.claim === '2fa') {
+				throw new AppError(
+					'Please complete two factor (/auth/two-factor)',
+					HttpStatus.FORBIDDEN
+				);
+			} else if (decodedToken.claim === 'passwordReset') {
+				throw new AppError(
+					'Please Reset your password (/auth/password/reset)',
+					HttpStatus.FORBIDDEN
+				);
+			}
+
 			return decodedToken;
 		} catch (err) {
 			if (err instanceof JsonWebTokenError) {
-				throw new AppError('Invalid Access Token', HttpStatus.UNAUTHORIZED);
+				throw new AppError(
+					'Missing or Invalid Access Token',
+					HttpStatus.UNAUTHORIZED
+				);
 			} else if (err instanceof TokenExpiredError) {
 				throw new AppError('Token expired', HttpStatus.UNAUTHORIZED);
+			} else {
+				throw new AppError(
+					'An error occured, please try again later',
+					HttpStatus.INTERNAL_SERVER_ERROR
+				);
 			}
 		}
 	}
