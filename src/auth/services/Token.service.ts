@@ -18,6 +18,19 @@ import {
 	selectedSessionCookie,
 	sessionCookie,
 } from '../constants/cookies';
+import type { User } from '../interfaces/user.interface';
+
+export type SessionBody = {
+	rid: string;
+	pendingTwoFactor: boolean;
+	pendingPasswordReset: boolean;
+	device: {
+		id: UUID;
+		deviceType: DeviceType;
+		ipAddress: IPAddress;
+	};
+	lastUsedAt: number;
+};
 
 export type RefreshTokenPayload = {
 	rid: string;
@@ -26,23 +39,17 @@ export type RefreshTokenPayload = {
 	issuedAt: number;
 };
 
-export type PartialTokenClaim = '2fa' | 'passwordReset';
-export type AccessTokenPayload =
-	| {
-			claim: 'full';
-			userId: UUID;
-			issuer: string;
-			audience: string;
-			scopes: string[];
-			issuedAt: number;
-	  }
-	| {
-			claim: PartialTokenClaim;
-			userId: UUID;
-			issuer: string;
-			audience: string;
-			issuedAt: number;
-	  };
+export type AccessTokenPayload = {
+	sid: string;
+	userId: UUID;
+	issuer: string;
+	audience: string;
+	pending: PendingActionType;
+	scopes: string[];
+	issuedAt: number;
+};
+
+export type PendingActionType = '2fa' | 'passwordReset' | null;
 
 export default class Token {
 	private _req;
@@ -59,7 +66,7 @@ export default class Token {
 	 * @param deviceId UUID Stored in cookie so each device has a unique identifier
 	 * @returns string
 	 */
-	public async create(userId: UUID): Promise<{
+	public async create(user: User): Promise<{
 		accessToken: string;
 	}> {
 		try {
@@ -72,7 +79,7 @@ export default class Token {
 				await db
 					.insert(deviceTable)
 					.values({
-						userId,
+						userId: user.id,
 						sessionId,
 						deviceId, // If no device id is specified (undefined) then it will be auto generated
 						device: {
@@ -106,7 +113,7 @@ export default class Token {
 					.returning()
 			)?.[0];
 
-			if (deviceId !== deviceRecord.deviceId) {
+			if (!deviceId) {
 				this._res.cookie(
 					deviceCookie.name,
 					deviceRecord.deviceId,
@@ -116,16 +123,27 @@ export default class Token {
 
 			// Register refresh token in redis whitelist
 			const sessionKey = `session:${sessionId}`;
-			await redisClient.hset(sessionKey, {
+			const sessionBody = {
 				rid: refreshTokenId,
-				device: JSON.stringify({
+				pendingTwoFactor: user.totpEnabled || user.phone2faEnabled,
+				pendingPasswordReset: user.forcePasswordChange,
+				device: {
 					// Log for validation and to prevent token theft if possible
 					id: deviceRecord.deviceId,
 					deviceType: deviceRecord.device.deviceType,
 					ipAddress: deviceRecord.device.ipAddress,
-				}),
-				lastUsedAt: Date.now().toString(),
-			});
+				},
+				lastUsedAt: Date.now(),
+			} satisfies SessionBody;
+			await redisClient.hset(
+				sessionKey,
+				Object.fromEntries(
+					Object.entries(sessionBody).map(([key, value]) => [
+						key,
+						JSON.stringify(value),
+					])
+				)
+			);
 			await redisClient.expire(
 				sessionKey,
 				parseTTL(env.REFRESH_TOKEN_TTL).seconds
@@ -135,7 +153,7 @@ export default class Token {
 			const refreshToken = jwt.sign(
 				{
 					rid: refreshTokenId,
-					userId,
+					userId: user.id,
 					deviceId: deviceRecord.deviceId,
 					issuedAt: Date.now(),
 				} satisfies RefreshTokenPayload,
@@ -156,12 +174,17 @@ export default class Token {
 			);
 
 			// Create Access JWT
+			let pending: PendingActionType = null;
+			if (user.phone2faEnabled || user.totpEnabled) pending = '2fa';
+			else if (user.forcePasswordChange) pending = 'passwordReset';
+
 			const accessToken = jwt.sign(
 				{
-					claim: 'full',
-					userId,
+					sid: sessionId,
+					userId: user.id,
 					issuer: 'This apis hostname',
 					audience: 'taylab-services',
+					pending,
 					scopes: ['user.read'], // TODO: Add permissions that the user has (based on db once implemented)
 					issuedAt: Date.now(),
 				} satisfies AccessTokenPayload,
@@ -201,36 +224,12 @@ export default class Token {
 		}
 	}
 
-	public async createPartial(userId: UUID, claim: PartialTokenClaim) {
-		// Create Access JWT
-		const accessToken = jwt.sign(
-			{
-				claim: claim,
-				userId,
-				issuer: 'This apis hostname',
-				audience: 'taylab-services',
-				issuedAt: Date.now(),
-			} satisfies AccessTokenPayload,
-			env.ACCESS_TOKEN_SECRET,
-			{
-				expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
-			}
-		);
-		this._res.cookie(
-			accessTokenCookie.name,
-			accessToken,
-			accessTokenCookie.options
-		);
-
-		return {
-			accessToken,
-		};
-	}
-
 	/**
 	 * @description Refresh both the access and refresh tokens
 	 */
-	public async refresh(): Promise<{
+	public async refresh(options?: {
+		resolve?: NonNullable<PendingActionType>;
+	}): Promise<{
 		accessToken: string;
 	}> {
 		const sessionId = this._req.cookies[selectedSessionCookie.name] as string;
@@ -246,18 +245,22 @@ export default class Token {
 
 		// Fetch session record from Redis
 		const sessionRecord = await redisClient.hgetall(sessionKey);
-		const session = {
-			rid: sessionRecord.rid,
-			device: JSON.parse(sessionRecord.device) as {
-				id: UUID;
-				deviceType: DeviceType;
-				ipAddress: IPAddress;
-			},
-			lastUsedAt: Number(sessionRecord.lastUsedAt),
-		};
+		const session = Object.fromEntries(
+			Object.entries(sessionRecord).map(([key, value]) => [
+				key,
+				JSON.parse(value),
+			])
+		) as SessionBody;
 
-		// If refresh token id is whitelisted with matching device IDs, token is valid
-		if (session.rid !== decodedToken.rid || session.device.id !== deviceId) {
+		// If refresh token id is whitelisted with matching device IDs, and if the DeviceType and IP Address both are the same, token is valid
+		// If either IP or DeviceType change due to a network or device update it will be reflected in the session.
+		// * This is done for further security and may be removed in future if it causes any UX problems
+		if (
+			session.rid !== decodedToken.rid ||
+			session.device.id !== deviceId ||
+			(session.device.deviceType !== parseDeviceType(this._req.useragent) &&
+				session.device.ipAddress !== parseDeviceIP(this._req))
+		) {
 			throw new AppError(
 				'Invalid token, please login again',
 				HttpStatus.UNAUTHORIZED
@@ -268,11 +271,30 @@ export default class Token {
 		const refreshTokenId = randomBytes(8).toString('hex'); // len: 16
 
 		// Update whitelist to reflect new refresh token id
-		await redisClient.hset(sessionKey, {
+		const sessionBody = {
 			rid: refreshTokenId,
-			device: JSON.stringify(session.device),
+			pendingTwoFactor:
+				options?.resolve === '2fa' ? false : session.pendingTwoFactor,
+			pendingPasswordReset:
+				options?.resolve === 'passwordReset'
+					? false
+					: session.pendingPasswordReset,
+			device: {
+				id: session.device.id,
+				deviceType: parseDeviceType(this._req.useragent),
+				ipAddress: parseDeviceIP(this._req),
+			},
 			lastUsedAt: Date.now(),
-		});
+		} satisfies SessionBody;
+		await redisClient.hset(
+			sessionKey,
+			Object.fromEntries(
+				Object.entries(sessionBody).map(([key, value]) => [
+					key,
+					JSON.stringify(value),
+				])
+			)
+		);
 		await redisClient.expire(
 			sessionKey,
 			parseTTL(env.REFRESH_TOKEN_TTL).seconds
@@ -296,12 +318,18 @@ export default class Token {
 			sessionCookie.options
 		);
 
+		let pending: PendingActionType = null;
+		// Check new session body for pending
+		if (sessionBody.pendingTwoFactor) pending = '2fa';
+		else if (sessionBody.pendingPasswordReset) pending = 'passwordReset';
+
 		const newAccessToken = jwt.sign(
 			{
-				claim: 'full',
+				sid: sessionId,
 				userId: decodedToken.userId,
 				issuer: 'This apis hostname',
 				audience: 'taylab-services',
+				pending,
 				scopes: ['user.read'], // TODO: Add permissions that the user has (based on db once implemented)
 				issuedAt: Date.now(),
 			} satisfies AccessTokenPayload,
@@ -333,16 +361,10 @@ export default class Token {
 				env.ACCESS_TOKEN_SECRET
 			) as AccessTokenPayload;
 
-			if (decodedToken.claim === '2fa') {
-				throw new AppError(
-					'Please complete two factor (/auth/two-factor)',
-					HttpStatus.FORBIDDEN
-				);
-			} else if (decodedToken.claim === 'passwordReset') {
-				throw new AppError(
-					'Please Reset your password (/auth/password/reset)',
-					HttpStatus.FORBIDDEN
-				);
+			if (decodedToken.pending === '2fa') {
+				throw new AppError('Finish Two Factor', HttpStatus.UNAUTHORIZED);
+			} else if (decodedToken.pending === 'passwordReset') {
+				throw new AppError('Reset Password', HttpStatus.UNAUTHORIZED);
 			}
 
 			return decodedToken;

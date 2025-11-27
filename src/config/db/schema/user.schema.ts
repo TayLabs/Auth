@@ -12,6 +12,9 @@ export const userTable = pgTable('users', {
 	email: varchar('email', { length: 256 }).notNull().unique(),
 	emailVerified: boolean('email_verified').notNull().default(false),
 	passwordHash: varchar('password_hash', { length: 512 }).notNull(),
+	forcePasswordChange: boolean('force_password_change')
+		.notNull()
+		.default(false),
 	phoneNumber: varchar('phone_number', { length: 32 }).unique(),
 	phone2faEnabled: boolean('phone_2fa_enabled').notNull().default(false),
 	totpEnabled: boolean('totp_enabled').notNull().default(false),

@@ -6,6 +6,7 @@ export type User = {
 	email: string;
 	emailVerified: boolean;
 	passwordHash?: string;
+	forcePasswordChange: boolean;
 	phoneNumber: string | null;
 	phone2faEnabled: boolean;
 	totpEnabled: boolean;

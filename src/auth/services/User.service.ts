@@ -6,6 +6,7 @@ import Password from '../utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
 import type { User as UserType } from '@/auth/interfaces/user.interface';
 import AppError from '@/types/AppError';
+import HttpStatus from '@/types/HttpStatus.enum';
 
 const { passwordHash: _passwordHash, ...userColumns } =
 	getTableColumns(userTable);
@@ -20,6 +21,13 @@ export default class User {
 				.innerJoin(profileTable, eq(profileTable.userId, userTable.id))
 				.where(eq(userTable.email, email))
 		)[0];
+
+		if (!user) {
+			throw new AppError(
+				'User does not exist, try signing up.',
+				HttpStatus.NOT_FOUND
+			);
+		}
 
 		if (!(await Password.verifyAsync(user.passwordHash, password))) {
 			throw new AppError('Invalid Password', 401);

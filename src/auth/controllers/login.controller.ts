@@ -18,9 +18,7 @@ export const loginController = controller<LoginReqBody, LoginResBody>(
 		const user = await User.login(req.body.email, req.body.password);
 
 		// Issue new tokens (partial if 2fa is enabled)
-		const { accessToken } = user.totpEnabled
-			? await new Token(req, res).createPartial(user.id, '2fa')
-			: await new Token(req, res).create(user.id);
+		const { accessToken } = await new Token(req, res).create(user);
 
 		res.status(HttpStatus.OK).json({
 			success: true,
@@ -46,7 +44,7 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
 			lastName: req.body.lastName,
 		});
 
-		const { accessToken } = await new Token(req, res).create(user.id);
+		const { accessToken } = await new Token(req, res).create(user);
 
 		res.status(HttpStatus.CREATED).json({
 			success: true,
@@ -83,7 +81,8 @@ export const totpCreateController = controller<
 >(async (req, res, _next) => {
 	const { totpTokenRecord, qrCode } = await new TOTP(req.user.id).create();
 
-	const { accessToken } = await new Token(req, res).create(req.user.id);
+	// TODO: Remove access token from being sent back and prompt the user to verify before properly adding the token
+	const { accessToken } = await new Token(req, res).refresh({ resolve: '2fa' });
 
 	res.status(HttpStatus.OK).json({
 		success: true,
