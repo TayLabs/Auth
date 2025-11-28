@@ -74,22 +74,3 @@ export const refreshController = controller<RefreshReqBody, RefreshResBody>(
 		});
 	}
 );
-
-export const totpCreateController = controller<
-	TOTPCreateReqBody,
-	TOTPCreateResBody
->(async (req, res, _next) => {
-	const { totpTokenRecord, qrCode } = await new TOTP(req.user.id).create();
-
-	// TODO: Remove access token from being sent back and prompt the user to verify before properly adding the token
-	const { accessToken } = await new Token(req, res).refresh({ resolve: '2fa' });
-
-	res.status(HttpStatus.OK).json({
-		success: true,
-		data: {
-			totpTokenRecord,
-			qrCode,
-			accessToken,
-		},
-	});
-});

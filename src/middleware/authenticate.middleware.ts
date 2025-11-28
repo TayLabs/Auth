@@ -23,6 +23,15 @@ const authenticate: (
 		// Verify Access Token
 		const payload = new Token(req, res).verify(accessToken);
 
+		if (payload.pending === '2fa' && overrideClaim !== '2fa') {
+			throw new AppError('Finish Two Factor', HttpStatus.UNAUTHORIZED);
+		} else if (
+			payload.pending === 'passwordReset' &&
+			overrideClaim !== 'passwordReset'
+		) {
+			throw new AppError('Reset Password', HttpStatus.UNAUTHORIZED);
+		}
+
 		req.user = { id: payload.userId };
 
 		next();

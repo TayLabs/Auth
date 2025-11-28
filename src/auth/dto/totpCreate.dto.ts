@@ -13,14 +13,13 @@ const totpCreateBodySchema = z.undefined();
 
 type TOTPCreateReqBody = z.infer<typeof totpCreateBodySchema>;
 type TOTPCreateResBody = ResponseBody<{
-	accessToken: string;
-	qrCode: string;
 	totpTokenRecord: {
 		id: UUID;
 		isVerified: boolean;
 		lastUsedAt: Date | null;
 		createdAt: Date;
 	};
+	qrCode: string;
 }>;
 
 export {

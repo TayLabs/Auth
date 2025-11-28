@@ -1,18 +1,19 @@
 import { authenticator } from 'otplib';
+import type { Request } from 'express';
 import type { UUID } from 'node:crypto';
 import { db } from '@/config/db';
 import { totpTokenTable } from '@/config/db/schema/totpToken.schema';
-import { eq, getTableColumns } from 'drizzle-orm';
+import { and, eq, getTableColumns } from 'drizzle-orm';
 import { decrypt, encrypt } from '../utils/encryption.utils';
 import HttpStatus from '@/types/HttpStatus.enum';
 import AppError from '@/types/AppError';
 import QRCode from 'qrcode';
 
 export default class TOTP {
-	private _userId: UUID;
+	private _req: Request;
 
-	constructor(userId: UUID) {
-		this._userId = userId;
+	constructor(req: Request) {
+		this._req = req;
 	}
 
 	public async create() {
@@ -29,7 +30,7 @@ export default class TOTP {
 			await db
 				.insert(totpTokenTable)
 				.values({
-					userId: this._userId,
+					userId: this._req.user.id,
 					encryptedSecret: content,
 					encryptionIv: iv,
 					encryptionAuthTag: authTag,
@@ -44,10 +45,48 @@ export default class TOTP {
 	}
 
 	public async verify(code: number) {
+		const totpToken = (
+			await db
+				.select()
+				.from(totpTokenTable)
+				.where(
+					and(
+						eq(totpTokenTable.id, this._req.params.totpTokenId as UUID),
+						eq(totpTokenTable.userId, this._req.user.id)
+					)
+				)
+		)[0];
+
+		if (totpToken.isVerified) {
+			throw new AppError('Token is already verified', HttpStatus.BAD_REQUEST);
+		}
+
+		// Decrypt the stored secret
+		const secret = decrypt({
+			content: totpToken.encryptedSecret,
+			iv: totpToken.encryptionIv,
+			tag: totpToken.encryptionAuthTag,
+		});
+
+		if (authenticator.check(code.toString(), secret)) {
+			// Update token record to isVerified = true
+			await db.update(totpTokenTable).set({
+				isVerified: true,
+				lastUsedAt: new Date(),
+			});
+		}
+	}
+
+	public async validate(code: number) {
 		const totpTokens = await db
 			.select()
 			.from(totpTokenTable)
-			.where(eq(totpTokenTable.userId, this._userId));
+			.where(
+				and(
+					eq(totpTokenTable.userId, this._req.user.id),
+					eq(totpTokenTable.isVerified, true)
+				)
+			);
 
 		let matchId: UUID | undefined = undefined;
 		for (const totpToken of totpTokens) {
@@ -60,8 +99,8 @@ export default class TOTP {
 			if (authenticator.check(code.toString(), secret)) {
 				matchId = totpToken.id;
 
+				// Update lastUsedAt date
 				await db.update(totpTokenTable).set({
-					isVerified: true,
 					lastUsedAt: new Date(),
 				});
 
@@ -79,6 +118,20 @@ export default class TOTP {
 	}
 
 	public async remove(totpTokenId: UUID) {
-		await db.delete(totpTokenTable).where(eq(totpTokenTable.id, totpTokenId));
+		const result = (
+			await db
+				.delete(totpTokenTable)
+				.where(eq(totpTokenTable.id, totpTokenId))
+				.returning({ id: totpTokenTable.id })
+		)[0];
+
+		if (!result) {
+			throw new AppError(
+				'Token with that Id does not exist',
+				HttpStatus.NOT_FOUND
+			);
+		}
+
+		return result;
 	}
 }

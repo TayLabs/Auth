@@ -361,12 +361,6 @@ export default class Token {
 				env.ACCESS_TOKEN_SECRET
 			) as AccessTokenPayload;
 
-			if (decodedToken.pending === '2fa') {
-				throw new AppError('Finish Two Factor', HttpStatus.UNAUTHORIZED);
-			} else if (decodedToken.pending === 'passwordReset') {
-				throw new AppError('Reset Password', HttpStatus.UNAUTHORIZED);
-			}
-
 			return decodedToken;
 		} catch (err) {
 			if (err instanceof JsonWebTokenError) {
