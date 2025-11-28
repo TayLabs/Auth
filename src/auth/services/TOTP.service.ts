@@ -8,6 +8,7 @@ import { decrypt, encrypt } from '../utils/encryption.utils';
 import HttpStatus from '@/types/HttpStatus.enum';
 import AppError from '@/types/AppError';
 import QRCode from 'qrcode';
+import { userTable } from '@/config/db/schema/user.schema';
 
 export default class TOTP {
 	private _req: Request;
@@ -17,7 +18,7 @@ export default class TOTP {
 	}
 
 	public async create() {
-		const secret = authenticator.generateSecret();
+		const secret = authenticator.generateSecret(20);
 		const otpAuthUri = authenticator.keyuri('email', 'TayLabAuth', secret);
 
 		const qrCode = await QRCode.toDataURL(otpAuthUri);
@@ -49,12 +50,7 @@ export default class TOTP {
 			await db
 				.select()
 				.from(totpTokenTable)
-				.where(
-					and(
-						eq(totpTokenTable.id, this._req.params.totpTokenId as UUID),
-						eq(totpTokenTable.userId, this._req.user.id)
-					)
-				)
+				.where(eq(totpTokenTable.id, this._req.params.totpTokenId as UUID))
 		)[0];
 
 		if (totpToken.isVerified) {
@@ -70,10 +66,21 @@ export default class TOTP {
 
 		if (authenticator.check(code.toString(), secret)) {
 			// Update token record to isVerified = true
-			await db.update(totpTokenTable).set({
-				isVerified: true,
-				lastUsedAt: new Date(),
+			await db.transaction(async (tx) => {
+				await tx.update(totpTokenTable).set({
+					isVerified: true,
+					lastUsedAt: new Date(),
+				});
+
+				await tx
+					.update(userTable)
+					.set({
+						totpEnabled: true,
+					})
+					.where(eq(userTable.id, totpToken.userId));
 			});
+		} else {
+			throw new AppError('Invalid code', HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -117,6 +124,10 @@ export default class TOTP {
 		}
 	}
 
+	/**
+	 * Removes a registered TOTP token
+	 * @param totpTokenId UUID
+	 */
 	public async remove(totpTokenId: UUID) {
 		const result = (
 			await db

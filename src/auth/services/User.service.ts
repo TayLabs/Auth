@@ -88,4 +88,6 @@ export default class User {
 			}
 		});
 	}
+
+	public static async update() {}
 }

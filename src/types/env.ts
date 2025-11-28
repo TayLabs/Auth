@@ -33,7 +33,7 @@ const envSchema = z.object({
 			/^\d+(m|h)$/,
 			'Must be a valid timespan in minutes or hours (suffix: m | h)'
 		)
-		.default('1h'),
+		.default('15m'),
 	REFRESH_TOKEN_SECRET: z
 		.string('Must be a valid string of characters')
 		.min(12, 'Must be at least 12 characters long')
