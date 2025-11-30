@@ -3,13 +3,9 @@ import HttpStatus from '@/types/HttpStatus.enum';
 import type { LoginReqBody, LoginResBody } from '../dto/login.dto';
 import type { SignupReqBody, SignupResBody } from '../dto/signup.dto';
 import type { RefreshReqBody, RefreshResBody } from '../dto/refresh.dto';
-import type {
-	TOTPCreateReqBody,
-	TOTPCreateResBody,
-} from '../dto/totpCreate.dto';
-import User from '../services/User.service';
-import Token from '../services/Token.service';
-import TOTP from '../services/TOTP.service';
+import User from '@/services/User.service';
+import Token from '@/services/Token.service';
+import TOTP from '@/services/TOTP.service';
 
 // /auth/login
 export const loginController = controller<LoginReqBody, LoginResBody>(

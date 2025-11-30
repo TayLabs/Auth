@@ -16,8 +16,10 @@ export const userTable = pgTable('users', {
 		.notNull()
 		.default(false),
 	phoneNumber: varchar('phone_number', { length: 32 }).unique(),
-	phone2faEnabled: boolean('phone_2fa_enabled').notNull().default(false),
-	totpEnabled: boolean('totp_enabled').notNull().default(false),
+	phoneTwoFactorEnabled: boolean('phone_two_factor_enabled')
+		.notNull()
+		.default(false),
+	twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	lastUsedAt: timestamp('last_used_at'),
 });

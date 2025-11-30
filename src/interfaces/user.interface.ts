@@ -8,8 +8,8 @@ export type User = {
 	passwordHash?: string;
 	forcePasswordChange: boolean;
 	phoneNumber: string | null;
-	phone2faEnabled: boolean;
-	totpEnabled: boolean;
+	phoneTwoFactorEnabled: boolean;
+	twoFactorEnabled: boolean;
 	createdAt: Date;
 	lastUsedAt: Date | null;
 	profile: Profile;

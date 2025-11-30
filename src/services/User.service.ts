@@ -4,7 +4,7 @@ import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import Password from '../utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
-import type { User as UserType } from '@/auth/interfaces/user.interface';
+import type { User as UserType } from '@/interfaces/user.interface';
 import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
 
