@@ -35,6 +35,18 @@ services:
       retries: 5
     profiles: ['development', 'production']
 
+  taylab-mail:
+    image: taylabs-mail # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
+    container_name: taylabs-mail
+    restart: no
+    environment:
+      API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
+      MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
+    ports:
+      - '7212:7212'
+    profiles: ['development', 'production']
+
 volumes:
   postgres:
   redis:
+  mail:
