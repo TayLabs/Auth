@@ -5,7 +5,6 @@
 	"main": "src/server.ts",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=development tsx src/server.ts",
-		"worker": "cross-env REDIS_HOST=localhost REDIS_PORT=6313 tsx src/workers/sessionCleanup/index.ts",
 		"watch": "cross-env NODE_ENV=development tsx --watch src/server.ts",
 		"db:init": "npx drizzle-kit generate && npx drizzle-kit migrate",
 		"docker:up": "docker compose --profile development up -d",
