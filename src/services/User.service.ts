@@ -2,17 +2,24 @@ import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
 import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
-import Password from '../utils/Password.util';
+import Password from '@/auth/utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
 import type { User as UserType } from '@/interfaces/user.interface';
 import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
+import type { UUID } from 'node:crypto';
 
 const { passwordHash: _passwordHash, ...userColumns } =
 	getTableColumns(userTable);
 const { userId: _userId, ...profileColumns } = getTableColumns(profileTable);
 
 export default class User {
+	private _userId: UUID;
+
+	constructor(userId: UUID) {
+		this._userId = userId;
+	}
+
 	public static async login(email: string, password: string) {
 		const user = (
 			await db
@@ -89,5 +96,42 @@ export default class User {
 		});
 	}
 
-	public static async update() {}
+	public async update(
+		data: Partial<
+			Omit<
+				typeof userTable.$inferInsert,
+				'id' | 'email' | 'passwordHash' | 'createdAt'
+			>
+		>
+	) {
+		try {
+			await db
+				.update(userTable)
+				.set({
+					...data,
+					// prevent fields from being modified
+					id: undefined,
+					email: undefined,
+					passwordHash: undefined,
+					createdAt: undefined,
+				})
+				.where(eq(userTable.id, this._userId));
+		} catch (err) {
+			if (
+				err instanceof DrizzleQueryError &&
+				err.cause instanceof DatabaseError
+			) {
+				switch (err.cause.code) {
+					// case '23505': // unique_violation
+					// 	throw new Error('Unique violation');
+					case '42P01': // undefined_table
+						throw new Error('Database table not found');
+					default:
+						throw err;
+				}
+			} else {
+				throw err;
+			}
+		}
+	}
 }

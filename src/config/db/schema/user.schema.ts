@@ -21,5 +21,4 @@ export const userTable = pgTable('users', {
 		.default(false),
 	twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
-	lastUsedAt: timestamp('last_used_at'),
 });
