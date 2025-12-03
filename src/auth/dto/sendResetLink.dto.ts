@@ -1,9 +1,12 @@
+import env from '@/types/env';
 import { type ResponseBody } from '@/types/ResponseBody';
 import z from 'zod';
 
 const sendResetLinkBodySchema = z.object({
   email: z.email('Must provide a valid email address'),
-  linkBaseUrl: z.url('Must provide a valid url to link too'),
+  linkBaseUrl: z
+    .url('Must provide a valid url to link too')
+    .refine((url) => url.startsWith(env.FRONTEND_URL), 'Invalid link base URL'),
 });
 
 type SendResetLinkReqBody = z.infer<typeof sendResetLinkBodySchema>;
