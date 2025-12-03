@@ -245,6 +245,13 @@ export default class Token {
 
     // Validate the old refresh token
     const token = this._req.cookies[sessionCookie.name(sessionId)] as string;
+    if (!token) {
+      throw new AppError(
+        'Session does not exist, please login again',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
     const deviceId = this._req.cookies[deviceCookie.name] as UUID;
     const decodedToken = jwt.verify(
       token,
@@ -253,13 +260,6 @@ export default class Token {
 
     // Fetch session record from Redis
     const sessionRecord = await redisClient.hgetall(sessionKey);
-
-    if (sessionRecord === null) {
-      throw new AppError(
-        'Invalid token, please login again',
-        HttpStatus.UNAUTHORIZED
-      );
-    }
 
     const session = Object.fromEntries(
       Object.entries(sessionRecord).map(([key, value]) => [
@@ -418,6 +418,8 @@ export default class Token {
 
     // Delete token from session whitelist
     await redisClient.del(deviceRecord.sessionId);
+
+    return { sessionId: deviceRecord.sessionId };
   }
 
   /**
@@ -439,5 +441,7 @@ export default class Token {
     for (const record of deviceRecords) {
       await redisClient.del(record.sessionId);
     }
+
+    return { sessionIds: deviceRecords.map((r) => r.sessionId) };
   }
 }

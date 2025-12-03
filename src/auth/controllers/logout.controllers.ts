@@ -7,6 +7,7 @@ import {
   accessTokenCookie,
   deviceCookie,
   selectedSessionCookie,
+  sessionCookie,
 } from '../constants/cookies';
 import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
@@ -28,11 +29,12 @@ export const logout = controller<
     throw new AppError('Device Id is required', HttpStatus.BAD_REQUEST);
   }
 
-  await new Token(req, res).invalidate(deviceId);
+  const result = await new Token(req, res).invalidate(deviceId);
 
-  if (!isDeviceLogout) {
+  if (!isDeviceLogout && result.sessionId) {
     res.clearCookie(accessTokenCookie.name);
     res.clearCookie(selectedSessionCookie.name);
+    res.clearCookie(sessionCookie.name(result.sessionId));
   }
 
   res.status(HttpStatus.OK).json({
@@ -45,7 +47,16 @@ export const logout = controller<
 
 export const logoutAll = controller<undefined, LogoutAllResBody>(
   async (req, res, _next) => {
-    await new Token(req, res).invalidateAll();
+    const result = await new Token(req, res).invalidateAll();
+
+    const sessionId = req.cookies[selectedSessionCookie.name] as
+      | UUID
+      | undefined;
+    if (sessionId) {
+      res.clearCookie(accessTokenCookie.name);
+      res.clearCookie(selectedSessionCookie.name);
+      res.clearCookie(sessionCookie.name(sessionId));
+    }
 
     res.status(HttpStatus.OK).json({
       success: true,
