@@ -5,6 +5,7 @@ import env from '@/types/env';
 import HttpStatus from '@/types/HttpStatus.enum';
 import { eq } from 'drizzle-orm';
 import crypto, { type UUID } from 'node:crypto';
+import parseTTL from './parseTTL.utils';
 
 export default class ResetLink {
 	public static async create(email: string) {
@@ -42,12 +43,28 @@ export default class ResetLink {
 
 		const result = (
 			await db
-				.select({ userId: passwordResetTable.userId })
+				.select({
+					id: passwordResetTable.id,
+					userId: passwordResetTable.userId,
+					createdAt: passwordResetTable.createdAt,
+				})
 				.from(passwordResetTable)
 				.where(eq(passwordResetTable.tokenHash, tokenHash))
 		)[0];
 
-		if (!result) {
+		// Clear token if used or expired
+		if (result?.id) {
+			await db
+				.delete(passwordResetTable)
+				.where(eq(passwordResetTable.id, result?.id));
+		}
+
+		// Check if token is valid or expired
+		if (
+			!result ||
+			result.createdAt.getTime() + parseTTL(env.RESET_TOKEN_TTL).seconds >=
+				Date.now()
+		) {
 			throw new AppError('Invalid reset token', HttpStatus.NOT_FOUND);
 		}
 
