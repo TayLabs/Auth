@@ -404,10 +404,28 @@ export default class Token {
           status: 'revoked',
         })
         .where(eq(deviceTable.deviceId, deviceId))
-        .returning()
+        .returning({ sessionId: deviceTable.sessionId })
     )?.[0];
 
     // Delete token from session whitelist
     await redisClient.del(deviceRecord.sessionId);
+  }
+
+  public async invalidateAll() {
+    const userId = this._req.user.id;
+
+    const deviceRecords = await db
+      .update(deviceTable)
+      .set({
+        status: 'revoked',
+      })
+      .where(eq(deviceTable.userId, userId))
+      .returning({
+        sessionId: deviceTable.sessionId,
+      });
+
+    for (const record of deviceRecords) {
+      await redisClient.del(record.sessionId);
+    }
   }
 }
