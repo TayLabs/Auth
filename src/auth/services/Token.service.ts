@@ -181,9 +181,10 @@ export default class Token {
 
       // Create Access JWT
       let pending: PendingActionType = null;
-      if (user.twoFactorEnabled) pending = '2fa';
-      else if (user.forcePasswordChange) pending = 'passwordReset';
-      else if (!user.emailVerified) pending = 'emailVerification';
+      if (sessionBody.pendingTwoFactor) pending = '2fa';
+      else if (sessionBody.pendingPasswordReset) pending = 'passwordReset';
+      else if (sessionBody.pendingEmailVerification)
+        pending = 'emailVerification';
 
       const accessToken = jwt.sign(
         {
@@ -252,6 +253,14 @@ export default class Token {
 
     // Fetch session record from Redis
     const sessionRecord = await redisClient.hgetall(sessionKey);
+
+    if (sessionRecord === null) {
+      throw new AppError(
+        'Invalid token, please login again',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
     const session = Object.fromEntries(
       Object.entries(sessionRecord).map(([key, value]) => [
         key,
@@ -333,7 +342,7 @@ export default class Token {
     // Check new session body for pending
     if (sessionBody.pendingTwoFactor) pending = '2fa';
     else if (sessionBody.pendingPasswordReset) pending = 'passwordReset';
-    else if (!sessionBody.pendingEmailVerification)
+    else if (sessionBody.pendingEmailVerification)
       pending = 'emailVerification';
 
     const newAccessToken = jwt.sign(
@@ -411,6 +420,9 @@ export default class Token {
     await redisClient.del(deviceRecord.sessionId);
   }
 
+  /**
+   * @description Invalidates all refresh tokens for a user
+   */
   public async invalidateAll() {
     const userId = this._req.user.id;
 

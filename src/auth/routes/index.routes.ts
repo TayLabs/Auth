@@ -3,6 +3,7 @@ import { loginRouter } from './login.routes';
 import { twoFactorRouter } from './twoFactor.routes';
 import { resetPasswordRouter } from './resetPassword.routes';
 import { verifyEmailRouter } from './verifyEmail.routes';
+import logoutRouter from './logout.routes';
 
 const authRoutes = express.Router();
 
@@ -10,5 +11,6 @@ authRoutes.use('/auth', loginRouter);
 authRoutes.use('/auth/totp', twoFactorRouter);
 authRoutes.use('/auth/password-reset', resetPasswordRouter);
 authRoutes.use('/auth/verify-email', verifyEmailRouter);
+authRoutes.use('/auth/logout', logoutRouter);
 
 export { authRoutes };

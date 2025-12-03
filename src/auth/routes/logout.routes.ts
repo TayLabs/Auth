@@ -11,7 +11,7 @@ import authenticate from '@/middleware/authenticate.middleware';
 const logoutRouter = Router();
 
 logoutRouter.delete(
-  '/:deviceId',
+  '{/:deviceId}', // optional query parameter
   authenticate(),
   validateQueryParams(logoutQueryParamsSchema),
   logout

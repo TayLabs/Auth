@@ -10,7 +10,9 @@ const logoutQueryParamsSchema = z.object({
 });
 
 type LogoutReqQueryParams = z.infer<typeof logoutQueryParamsSchema>;
-type LogoutResBody = ResponseBody;
+type LogoutResBody = ResponseBody<{
+  message: string;
+}>;
 
 export {
   logoutQueryParamsSchema,
