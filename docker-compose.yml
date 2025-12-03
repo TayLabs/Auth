@@ -38,13 +38,41 @@ services:
   taylab-mail:
     image: taylabs-mail # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
     container_name: taylabs-mail
-    restart: no
+    restart: unless-stopped
     environment:
       API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
     ports:
       - '7212:7212'
     profiles: ['development', 'production']
+
+  taylab-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taylab-auth
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@postgres:5432/auth
+      REDIS_URI: redis:6313
+      MAIL_API: taylab-mail:7212
+      MAIL_API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
+      ACCESS_TOKEN_SECRET:
+      REFRESH_TOKEN_SECRET:
+      TOTP_ENCRYPT_KEY:
+      RESET_TOKEN_HASH_KEY:
+      EMAIL_VERIFICATION_SECRET:
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      taylab-mail:
+        condition: service_healthy
+    ports:
+      - '7313:7313'
+    profiles: ['production']
 
 volumes:
   postgres:

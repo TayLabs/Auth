@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx src/server.ts",
     "watch": "cross-env NODE_ENV=development tsx watch --include \"./src/**/*\" src/server.ts",
+    "test": "cross-env NODE_ENV=test jest",
     "db:init": "npx drizzle-kit generate && npx drizzle-kit migrate",
     "docker:up": "docker compose --profile development up -d",
     "docker:start": "docker compose --profile development start",
@@ -20,16 +21,22 @@
   "license": "ISC",
   "packageManager": "pnpm@10.22.0",
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
     "@types/body-parser": "^1.19.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
     "@types/qrcode": "^1.5.6",
+    "@types/supertest": "^6.0.3",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.7",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.6",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
@@ -51,6 +58,7 @@
     "otplib": "^12.0.1",
     "pg": "^8.16.3",
     "qrcode": "^1.5.4",
+    "ts-node": "^10.9.2",
     "winston": "^3.18.3",
     "zod": "^4.1.12"
   }
