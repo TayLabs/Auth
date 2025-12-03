@@ -7,12 +7,12 @@ import authenticate from '@/middleware/authenticate.middleware';
 // /auth/logout/*
 const logoutRouter = Router();
 
+logoutRouter.delete('/all', authenticate(), logoutAll); // This is called before /:deviceId to avoid conflicts
 logoutRouter.delete(
-  /\/(?<deviceId>[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})$/, // optional query parameter for deviceId as UUIDv4
+  '/{:deviceId}',
   authenticate(),
   validateQueryParams(logoutQueryParamsSchema),
   logout
 );
-logoutRouter.delete('/all', authenticate(), logoutAll);
 
 export default logoutRouter;
