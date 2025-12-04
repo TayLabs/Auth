@@ -8,11 +8,12 @@ const pool = new Pool({
 	max: 1,
 });
 
-const initializeDatabase = async () => {
+const initializeDatabase = () => {
 	const db = drizzle({ client: pool, schema });
 
 	// Optionally test the connection
-	await pool
+	// await
+	pool
 		.query('SELECT 1')
 		.then(() => {
 			console.log('🔌 Database connection established successfully.');
