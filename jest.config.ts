@@ -1,3 +1,6 @@
+import { register } from 'tsconfig-paths';
+register();
+
 import type { JestConfigWithTsJest } from 'ts-jest';
 
 export default {

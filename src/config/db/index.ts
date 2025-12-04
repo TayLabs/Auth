@@ -5,7 +5,6 @@ import * as schema from './schema/index.schema';
 
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL!,
-	max: 1,
 });
 pool.on('connect', () => {
 	console.log('🔌 Database connection established successfully.');
