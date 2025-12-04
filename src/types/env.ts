@@ -9,6 +9,9 @@ if (process.env.NODE_ENV === 'development') {
 		override: true,
 		quiet: true, // Disable logs/tips
 	});
+} else if (process.env.NODE_ENV === 'test') {
+	dotenv.config({ path: '.env', quiet: true });
+	dotenv.config({ path: '.env.test', override: true, quiet: true });
 }
 
 const envSchema = z.object({
