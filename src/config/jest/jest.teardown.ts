@@ -2,13 +2,13 @@ import { StartedDockerComposeEnvironment } from 'testcontainers';
 import redisClient from '../redis/client';
 
 export default async function teardown(): Promise<void> {
-	await redisClient.quit(); // close redis connection
+  redisClient.disconnect(); // close redis connection
 
-	const environment = (global as any).__DOCKER_COMPOSE_ENV__ as
-		| StartedDockerComposeEnvironment
-		| undefined;
+  const environment = (global as any).__DOCKER_COMPOSE_ENV__ as
+    | StartedDockerComposeEnvironment
+    | undefined;
 
-	if (environment) {
-		await environment.down();
-	}
+  if (environment) {
+    await environment.down();
+  }
 }

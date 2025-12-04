@@ -5,7 +5,7 @@ import request from 'supertest';
 
 describe('Login route', () => {
   test('Login route with proper credentials returns successful', async () => {
-    const response = (await request(app).post('/api/v1/auth/login')).body({
+    const response = await request(app).post('/api/v1/auth/login').send({
       email: '',
       password: '',
     });

@@ -3,8 +3,8 @@ import {
   DockerComposeEnvironment,
   type StartedDockerComposeEnvironment,
 } from 'testcontainers';
-import runMigrations from '../db/utils/runMigrations';
-import generateSchema from '../db/utils/generateSchema';
+// import runMigrations from '../db/utils/runMigrations';
+// import generateSchema from '../db/utils/generateSchema';
 
 export default async function setup(): Promise<void> {
   const directory = path.resolve(__dirname, '../../..');
@@ -19,8 +19,8 @@ export default async function setup(): Promise<void> {
       .up();
 
   // Migrate and seed database
-  generateSchema();
-  await runMigrations();
+  // generateSchema();
+  // await runMigrations();
 
   (global as any).__DOCKER_COMPOSE_ENV__ = environment;
 }
