@@ -2,6 +2,7 @@ import env from './types/env';
 import app from './app';
 import runMigrations from './config/db/utils/runMigrations';
 import redisClient from './config/redis/client';
+import { pool } from './config/db';
 
 async function startServer() {
   try {
@@ -15,6 +16,7 @@ async function startServer() {
     process.on('SIGTERM', async () => {
       // close redis connection
       redisClient.disconnect();
+      await pool.end();
 
       await server.close();
       process.exit(0);

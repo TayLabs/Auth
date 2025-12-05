@@ -1,13 +1,14 @@
 import app from '@/app';
+import { users } from '@/config/db/seed/data';
 import HttpStatus from '@/types/HttpStatus.enum';
 import { describe, expect } from '@jest/globals';
 import request from 'supertest';
 
 describe('Login route', () => {
-  test('Login route with proper credentials returns successful', async () => {
+  test('Return successful with proper credentials', async () => {
     const response = await request(app).post('/api/v1/auth/login').send({
-      email: '',
-      password: '',
+      email: users[0].email,
+      password: users[0].passwordHash,
     });
 
     expect(response.status).toBe(HttpStatus.OK);

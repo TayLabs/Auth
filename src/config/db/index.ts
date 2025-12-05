@@ -1,19 +1,21 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { DatabaseError, Pool } from 'pg';
 import * as schema from './schema/index.schema';
 
 const pool = new Pool({
-	connectionString: process.env.DATABASE_URL!,
+  connectionString: process.env.DATABASE_URL!,
 });
 pool.on('connect', () => {
-	console.log('🔌 Database connection established successfully.');
+  console.log('🔌 Database connection established successfully.');
 });
 pool.on('error', (err) => {
-	console.error('🛑 Database connection test failed:', err);
-	process.exit(1);
+  if (err instanceof DatabaseError && err.code === '57P01') return; // Ignore 'admin shutdown' errors
+
+  console.error('🛑 Database connection failed:', err);
+  process.exit(1);
 });
 
 const db = drizzle({ client: pool, schema });
 
-export { db };
+export { db, pool };
