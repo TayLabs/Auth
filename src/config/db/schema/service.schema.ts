@@ -1,7 +1,8 @@
-import { uuid } from 'drizzle-orm/pg-core';
+import { uuid, varchar } from 'drizzle-orm/pg-core';
 import { pgTable } from 'drizzle-orm/pg-core';
 import { UUID } from 'node:crypto';
 
-const serviceTable = pgTable('services', {
+export const serviceTable = pgTable('services', {
 	id: uuid('id').$type<UUID>().primaryKey().defaultRandom(),
+	name: varchar('name', { length: 256 }).notNull().unique(),
 });

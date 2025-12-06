@@ -6,6 +6,7 @@ declare global {
 			/** Parsed user-agent details added by `express-useragent` middleware */
 			user: {
 				id: UUID;
+				scopes: string[];
 			};
 		}
 	}
