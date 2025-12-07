@@ -205,7 +205,7 @@ export default class Token {
 					userRoleTable,
 					eq(userRoleTable.roleId, rolePermissionTable.roleId)
 				)
-				.where(eq(userRoleTable.userId, this._req.user.id));
+				.where(eq(userRoleTable.userId, user.id));
 
 			const accessToken = jwt.sign(
 				{
@@ -385,7 +385,7 @@ export default class Token {
 				userRoleTable,
 				eq(userRoleTable.roleId, rolePermissionTable.roleId)
 			)
-			.where(eq(userRoleTable.userId, this._req.user.id));
+			.where(eq(userRoleTable.userId, decodedToken.userId));
 
 		const newAccessToken = jwt.sign(
 			{
