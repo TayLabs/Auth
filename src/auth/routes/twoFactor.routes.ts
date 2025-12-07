@@ -9,10 +9,10 @@ import { totpRouter } from '@/account/routes/totp.routes';
 const twoFactorRouter = express.Router();
 
 totpRouter.post(
-  '/totp/validate',
-  authenticate('2fa'), // Allows token's marked as pending 2fa
-  validateBody(totpValidateBodySchema),
-  totpValidateController
+	'/totp/validate',
+	authenticate({ acceptPending: '2fa' }), // Allows token's marked as pending 2fa
+	validateBody(totpValidateBodySchema),
+	totpValidateController
 );
 
 export { twoFactorRouter };

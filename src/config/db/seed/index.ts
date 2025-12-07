@@ -7,6 +7,7 @@ import {
 	roleTable,
 	permissionTable,
 	rolePermissionTable,
+	userRoleTable,
 } from '../schema/index.schema';
 import prod from './prod.data';
 
@@ -14,7 +15,7 @@ export default async function seed(options?: { includeTestData: boolean }) {
 	try {
 		await db.transaction(async (tx) => {
 			// insert user/profiles
-			await tx
+			const users = await tx
 				.insert(userTable)
 				.values(
 					await Promise.all(
@@ -38,7 +39,6 @@ export default async function seed(options?: { includeTestData: boolean }) {
 				const filtered = prod.permissions.filter((permission) =>
 					permission.roles.includes(role.name)
 				);
-
 				if (filtered.length > 0) {
 					const permissions = await tx
 						.insert(permissionTable)
@@ -60,6 +60,17 @@ export default async function seed(options?: { includeTestData: boolean }) {
 							}))
 						)
 						.onConflictDoNothing();
+				}
+			}
+			for (const user of prod.users) {
+				const filtered = roles.filter((role) => user.roles.includes(role.name));
+				if (filtered.length > 0) {
+					await tx.insert(userRoleTable).values(
+						filtered.map((role) => ({
+							userId: user.id,
+							roleId: role.id,
+						}))
+					);
 				}
 			}
 		});

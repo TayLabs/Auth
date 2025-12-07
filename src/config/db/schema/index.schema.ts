@@ -9,3 +9,4 @@ export * from './role.schema';
 export * from './rolePermission.schema';
 export * from './permission.schema';
 export * from './service.schema';
+export * from './userRole.schema';

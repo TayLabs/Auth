@@ -4,9 +4,10 @@ import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
 import { RequestHandler } from 'express';
 
-const authenticate: (
-	allowPending?: NonNullable<PendingActionType>
-) => RequestHandler = (overrideClaim) => (req, res, next) => {
+const authenticate: (options?: {
+	allow?: string[];
+	acceptPending?: NonNullable<PendingActionType>;
+}) => RequestHandler = (options) => (req, res, next) => {
 	try {
 		// Parse Access Token
 		const accessToken: string | undefined =
@@ -23,18 +24,32 @@ const authenticate: (
 		// Verify Access Token
 		const payload = new Token(req, res).verify(accessToken);
 
-		if (payload.pending === '2fa' && overrideClaim !== '2fa') {
+		if (payload.pending === '2fa' && options?.acceptPending !== '2fa') {
 			throw new AppError('Finish Two Factor', HttpStatus.UNAUTHORIZED);
 		} else if (
 			payload.pending === 'passwordReset' &&
-			overrideClaim !== 'passwordReset'
+			options?.acceptPending !== 'passwordReset'
 		) {
 			throw new AppError('Reset Password', HttpStatus.UNAUTHORIZED);
 		} else if (
 			payload.pending === 'emailVerification' &&
-			overrideClaim !== 'emailVerification'
+			options?.acceptPending !== 'emailVerification'
 		) {
 			throw new AppError('Verify Email', HttpStatus.UNAUTHORIZED);
+		}
+
+		// check user scopes
+		let allowed = false;
+		if (options?.allow) {
+			for (const permission of options.allow) {
+				if (payload.scopes.includes(permission)) allowed = true;
+			}
+		}
+		if (!allowed) {
+			throw new AppError(
+				'Not allowed to view this route',
+				HttpStatus.FORBIDDEN
+			);
 		}
 
 		req.user = { id: payload.userId, scopes: payload.scopes };
