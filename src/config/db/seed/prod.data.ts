@@ -14,7 +14,7 @@ const prod = {
 			emailVerified: !z.email().safeParse(env.ADMIN.EMAIL).success, // Won't work with sending password reset to email if there's not a valid email, but non-email usernames won't validate properly on that route anyways
 			passwordHash: env.ADMIN.PASSWORD,
 			forcePasswordChange: env.ADMIN.PASSWORD === 'admin', // force change if it's the default password
-			roles: ['admin'],
+			roles: ['admin', 'user'],
 		},
 	] satisfies (typeof userTable.$inferInsert & {
 		roles: string[];
@@ -48,13 +48,19 @@ const prod = {
 			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			resource: 'user',
 			action: 'read',
-			roles: ['auth'],
+			roles: ['user'],
 		},
 		{
 			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			resource: 'user',
 			action: 'write',
-			roles: ['auth'],
+			roles: ['user'],
+		},
+		{
+			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
+			resource: 'role',
+			action: 'write',
+			roles: ['admin'],
 		},
 	] satisfies (typeof permissionTable.$inferInsert & {
 		roles: string[];

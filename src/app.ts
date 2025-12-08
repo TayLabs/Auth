@@ -7,6 +7,8 @@ import bodyParser from 'body-parser';
 import { express as useragent } from 'express-useragent';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { accountRoutes } from './account/routes/index.routes';
+import { adminRoutes } from './admin/routes/index.routes';
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use(useragent());
 
 // Register routes (anything exported from /*/routes/*.router.ts)
 app.use('/api/v1', authRoutes);
+app.use('/api/v1', accountRoutes);
+app.use('/api/v1', adminRoutes);
 
 // Handle 404 - Not Found
 app.use(notFoundHandler);
