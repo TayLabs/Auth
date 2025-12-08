@@ -9,7 +9,7 @@ const securityRouter = Router({ mergeParams: true });
 
 securityRouter.patch(
   '/two-factor/:switch',
-  authenticate(),
+  authenticate({ allow: ['user.write'] }),
   validateParams(toggleTwoFactorParamsSchema),
   toggleTwoFactor
 );
