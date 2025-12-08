@@ -64,12 +64,15 @@ export default async function seed(options?: { includeTestData: boolean }) {
           user.roles.includes(role.name)
         );
         if (filtered.length > 0) {
-          await tx.insert(userRoleTable).values(
-            filtered.map((role) => ({
-              userId: user.id,
-              roleId: role.id,
-            }))
-          );
+          await tx
+            .insert(userRoleTable)
+            .values(
+              filtered.map((role) => ({
+                userId: user.id,
+                roleId: role.id,
+              }))
+            )
+            .onConflictDoNothing();
         }
       }
     });
