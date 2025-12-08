@@ -1,18 +1,17 @@
 import express from 'express';
 import { validateBody } from '@/middleware/validate.middleware';
-import { totpValidateController } from '../controllers/twoFactor.controllers';
+import { validate } from '../controllers/totp.controllers';
 import authenticate from '@/middleware/authenticate.middleware';
-import totpValidateBodySchema from '@/auth/dto/totpValidate.dto';
-import { totpRouter } from '@/account/routes/totp.routes';
+import totpValidateBodySchema from '@/auth/dto/totp/validate.dto';
 
 // /auth/*
-const twoFactorRouter = express.Router();
+const totpRouter = express.Router();
 
 totpRouter.post(
   '/validate',
   authenticate({ acceptPending: '2fa' }), // Allows token's marked as pending 2fa
   validateBody(totpValidateBodySchema),
-  totpValidateController
+  validate
 );
 
-export { twoFactorRouter };
+export { totpRouter };
