@@ -30,17 +30,14 @@ export default async function seed(options?: { includeTestData: boolean }) {
 
 			// insert service, roles, and permissions
 			await tx.insert(serviceTable).values(prod.services).onConflictDoNothing();
-			const roles = await tx
-				.insert(roleTable)
-				.values(prod.roles)
-				.returning()
-				.onConflictDoNothing();
-			for (const role of roles) {
+			await tx.insert(roleTable).values(prod.roles).onConflictDoNothing();
+
+			for (const role of prod.roles) {
 				const filtered = prod.permissions.filter((permission) =>
 					permission.roles.includes(role.name)
 				);
 				if (filtered.length > 0) {
-					const permissions = await tx
+					await tx
 						.insert(permissionTable)
 						.values(
 							filtered.map((permission) => ({
@@ -54,7 +51,7 @@ export default async function seed(options?: { includeTestData: boolean }) {
 					await tx
 						.insert(rolePermissionTable)
 						.values(
-							permissions.map((permission) => ({
+							filtered.map((permission) => ({
 								permissionId: permission.id,
 								roleId: role.id,
 							}))
@@ -63,7 +60,9 @@ export default async function seed(options?: { includeTestData: boolean }) {
 				}
 			}
 			for (const user of prod.users) {
-				const filtered = roles.filter((role) => user.roles.includes(role.name));
+				const filtered = prod.roles.filter((role) =>
+					user.roles.includes(role.name)
+				);
 				if (filtered.length > 0) {
 					await tx.insert(userRoleTable).values(
 						filtered.map((role) => ({

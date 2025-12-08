@@ -36,27 +36,32 @@ const prod = {
 	] satisfies (typeof serviceTable.$inferInsert)[],
 	roles: [
 		{
+			id: '23e28142-85b2-412a-8e20-eeed89bbfa04',
 			name: 'admin',
 		},
 		{
+			id: 'e5075ee5-2083-4018-bd78-6e266662067d',
 			name: 'user',
 			assignToNewUser: true,
 		},
 	] satisfies (typeof roleTable.$inferInsert)[],
 	permissions: [
 		{
+			id: '920b5a41-348e-4f29-b25c-8ea1c63bfc40',
 			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			resource: 'user',
 			action: 'read',
 			roles: ['user'],
 		},
 		{
+			id: 'a2664168-5db7-437a-9bee-355617db4037',
 			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			resource: 'user',
 			action: 'write',
 			roles: ['user'],
 		},
 		{
+			id: '3bb84928-5878-4703-8276-d46913535c59',
 			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			resource: 'role',
 			action: 'write',
