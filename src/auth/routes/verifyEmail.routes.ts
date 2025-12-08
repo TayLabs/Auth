@@ -12,13 +12,13 @@ import authenticate from '@/middleware/authenticate.middleware';
 const verifyEmailRouter = express.Router();
 
 verifyEmailRouter.post(
-	'/send',
+	'/verify/request',
 	authenticate({ acceptPending: 'emailVerification' }),
 	validateBody(sendVerifyEmailBodySchema),
 	sendVerify
 );
 verifyEmailRouter.post(
-	'/',
+	'/verify',
 	validateQueryParams(verifyEmailQueryParamsSchema),
 	verify
 );

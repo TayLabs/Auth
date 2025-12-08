@@ -104,6 +104,7 @@ const envSchema = z.object({
 		)
 		.default('10m'),
 	FRONTEND_URL: z.url('Please include a front-end url for use in redirects'),
+	SERVICE_NAME: z.string().default('auth'),
 	ADMIN: z
 		.string()
 		.regex(

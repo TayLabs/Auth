@@ -1,6 +1,7 @@
 import { accessTokenCookie } from '@/auth/constants/cookies';
 import Token, { type PendingActionType } from '@/auth/services/Token.service';
 import AppError from '@/types/AppError';
+import env from '@/types/env';
 import HttpStatus from '@/types/HttpStatus.enum';
 import { RequestHandler } from 'express';
 
@@ -42,7 +43,8 @@ const authenticate: (options?: {
 		let allowed = false;
 		if (options?.allow) {
 			for (const permission of options.allow) {
-				if (payload.scopes.includes(permission)) allowed = true;
+				if (payload.scopes.includes(`${env.SERVICE_NAME}:${permission}`))
+					allowed = true;
 			}
 		}
 		if (!allowed) {

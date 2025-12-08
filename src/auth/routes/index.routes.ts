@@ -9,8 +9,8 @@ const authRoutes = express.Router();
 
 authRoutes.use('/auth', loginRouter);
 authRoutes.use('/auth/totp', twoFactorRouter);
-authRoutes.use('/auth/password-reset', resetPasswordRouter);
-authRoutes.use('/auth/verify-email', verifyEmailRouter);
+authRoutes.use('/auth/password', resetPasswordRouter);
+authRoutes.use('/auth/email', verifyEmailRouter);
 authRoutes.use('/auth/logout', logoutRouter);
 
 export { authRoutes };
