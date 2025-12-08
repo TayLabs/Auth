@@ -1,6 +1,6 @@
 import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
-import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
+import { eq, DrizzleQueryError, getTableColumns, and } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import Password from '@/auth/utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
@@ -145,5 +145,44 @@ export default class User {
         forcePasswordChange: false,
       })
       .where(eq(userTable.id, this._userId));
+  }
+
+  public async changePassword(currentPassword: string, newPassword: string) {
+    const currentPasswordHash = await Password.hashAsync(currentPassword);
+    const newPasswordHash = await Password.hashAsync(newPassword);
+
+    const result = (
+      await db
+        .update(userTable)
+        .set({
+          passwordHash: newPasswordHash,
+          forcePasswordChange: false,
+        })
+        .where(
+          and(
+            eq(userTable.id, this._userId),
+            eq(userTable.passwordHash, currentPasswordHash)
+          )
+        )
+        .returning({ id: userTable.id })
+    )[0];
+
+    if (!result) {
+      throw new AppError(
+        'Current password does not match',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  public async delete() {
+    const result = (
+      await db
+        .delete(userTable)
+        .where(eq(userTable.id, this._userId))
+        .returning({ id: userTable.id })
+    )[0];
+
+    return result;
   }
 }
