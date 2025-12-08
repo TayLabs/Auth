@@ -13,7 +13,7 @@ const verifyEmailRouter = express.Router();
 
 verifyEmailRouter.post(
 	'/send',
-	authenticate('emailVerification'),
+	authenticate({ acceptPending: 'emailVerification' }),
 	validateBody(sendVerifyEmailBodySchema),
 	sendVerify
 );

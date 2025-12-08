@@ -4,13 +4,14 @@ import { validateParams } from '@/middleware/validate.middleware';
 import toggleTwoFactorParamsSchema from '../dto/toggleTwoFactor.dto';
 import { update } from '../controllers/profile.controllers';
 
+// /account/profile/*
 const profileRouter = Router();
 
 profileRouter.patch(
-  '/profile',
-  authenticate(),
-  validateParams(toggleTwoFactorParamsSchema),
-  update
+	'/security',
+	authenticate({ allow: ['user.write'] }),
+	validateParams(toggleTwoFactorParamsSchema),
+	update
 );
 
 export { profileRouter };

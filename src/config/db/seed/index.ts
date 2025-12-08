@@ -1,23 +1,82 @@
 import Password from '@/auth/utils/Password.util';
 import { db } from '..';
-import { userTable } from '../schema/user.schema';
-import { users } from './data';
+import {
+	userTable,
+	profileTable,
+	serviceTable,
+	roleTable,
+	permissionTable,
+	rolePermissionTable,
+	userRoleTable,
+} from '../schema/index.schema';
+import prod from './prod.data';
 
-export default async function seed() {
-  try {
-    await db.delete(userTable);
+export default async function seed(options?: { includeTestData: boolean }) {
+	try {
+		await db.transaction(async (tx) => {
+			// insert user/profiles
+			const users = await tx
+				.insert(userTable)
+				.values(
+					await Promise.all(
+						prod.users.map(async (user) => ({
+							...user,
+							passwordHash: await Password.hashAsync(user.passwordHash),
+						}))
+					)
+				)
+				.onConflictDoNothing();
+			await tx.insert(profileTable).values(prod.profiles).onConflictDoNothing();
 
-    await db.insert(userTable).values(
-      await Promise.all(
-        users.map(async (user) => ({
-          ...user,
-          passwordHash: await Password.hashAsync(user.passwordHash),
-        }))
-      )
-    );
+			// insert service, roles, and permissions
+			await tx.insert(serviceTable).values(prod.services).onConflictDoNothing();
+			const roles = await tx
+				.insert(roleTable)
+				.values(prod.roles)
+				.returning()
+				.onConflictDoNothing();
+			for (const role of roles) {
+				const filtered = prod.permissions.filter((permission) =>
+					permission.roles.includes(role.name)
+				);
+				if (filtered.length > 0) {
+					const permissions = await tx
+						.insert(permissionTable)
+						.values(
+							filtered.map((permission) => ({
+								...permission,
+								roles: undefined,
+							}))
+						)
+						.returning()
+						.onConflictDoNothing();
 
-    console.log('Database seeded successfully.');
-  } catch (err) {
-    console.error(err);
-  }
+					await tx
+						.insert(rolePermissionTable)
+						.values(
+							permissions.map((permission) => ({
+								permissionId: permission.id,
+								roleId: role.id,
+							}))
+						)
+						.onConflictDoNothing();
+				}
+			}
+			for (const user of prod.users) {
+				const filtered = roles.filter((role) => user.roles.includes(role.name));
+				if (filtered.length > 0) {
+					await tx.insert(userRoleTable).values(
+						filtered.map((role) => ({
+							userId: user.id,
+							roleId: role.id,
+						}))
+					);
+				}
+			}
+		});
+
+		console.log('🌱 Seed data inserted');
+	} catch (err) {
+		console.error(err);
+	}
 }

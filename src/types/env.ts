@@ -104,6 +104,17 @@ const envSchema = z.object({
 		)
 		.default('10m'),
 	FRONTEND_URL: z.url('Please include a front-end url for use in redirects'),
+	ADMIN: z
+		.string()
+		.regex(
+			/[a-zA-Z0-9]@+:[a-zA-Z0-9]+/,
+			'Must be a valid format like (email@example.com:password)'
+		)
+		.default('admin:admin') // password change is forced if password === default
+		.transform((str) => ({
+			EMAIL: str?.split(':')[0],
+			PASSWORD: str?.split(':')[1],
+		})),
 });
 type EnvVariables = z.infer<typeof envSchema>;
 
