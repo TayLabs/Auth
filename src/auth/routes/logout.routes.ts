@@ -5,7 +5,7 @@ import { logout, logoutAll } from '../controllers/logout.controllers';
 import authenticate from '@/middleware/authenticate.middleware';
 
 // /auth/logout/*
-const logoutRouter = Router();
+const logoutRouter = Router({ mergeParams: true });
 
 logoutRouter.delete('/all', authenticate(), logoutAll); // This is called before /:deviceId to avoid conflicts
 logoutRouter.delete(

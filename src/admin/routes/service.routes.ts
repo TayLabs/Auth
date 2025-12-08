@@ -13,7 +13,7 @@ import { getServiceParamSchema } from '../dto/services/get.dto';
 import { updateServiceBodySchema } from '../dto/services/update.dto';
 import { deleteServiceParamSchema } from '../dto/services/delete.dto';
 
-const serviceRouter = Router();
+const serviceRouter = Router({ mergeParams: true });
 
 serviceRouter.get('/', authenticate({ allow: ['service.read'] }), getAll);
 serviceRouter.get(

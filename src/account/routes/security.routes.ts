@@ -5,7 +5,7 @@ import toggleTwoFactorParamsSchema from '../dto/toggleTwoFactor.dto';
 import { toggleTwoFactor } from '../controllers/security.controllers';
 
 // /account/security/*
-const securityRouter = Router();
+const securityRouter = Router({ mergeParams: true });
 
 securityRouter.patch(
   '/two-factor/:switch',

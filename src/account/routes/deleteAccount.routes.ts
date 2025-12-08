@@ -5,7 +5,7 @@ import { deleteAccountParamsSchema } from '../dto/deleteAccount.dto';
 import { deleteAccount } from '../controllers/delete.controllers';
 
 // /account/delete/*
-const deleteAccountRouter = Router();
+const deleteAccountRouter = Router({ mergeParams: true });
 
 deleteAccountRouter.delete(
   '/:userId',

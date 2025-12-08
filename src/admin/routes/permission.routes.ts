@@ -20,7 +20,7 @@ import {
 } from '../dto/permissions/update.dto';
 import { getAllPermissionsParamSchema } from '../dto/permissions/getAll.dto';
 
-const permissionRouter = Router();
+const permissionRouter = Router({ mergeParams: true });
 
 permissionRouter.get(
   '/',

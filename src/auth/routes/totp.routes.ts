@@ -5,7 +5,7 @@ import authenticate from '@/middleware/authenticate.middleware';
 import totpValidateBodySchema from '@/auth/dto/totp/validate.dto';
 
 // /auth/*
-const totpRouter = express.Router();
+const totpRouter = express.Router({ mergeParams: true });
 
 totpRouter.post(
   '/validate',

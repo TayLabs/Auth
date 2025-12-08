@@ -5,13 +5,13 @@ import toggleTwoFactorParamsSchema from '../dto/toggleTwoFactor.dto';
 import { update } from '../controllers/profile.controllers';
 
 // /account/profile/*
-const profileRouter = Router();
+const profileRouter = Router({ mergeParams: true });
 
 profileRouter.patch(
-	'/security',
-	authenticate({ allow: ['user.write'] }),
-	validateParams(toggleTwoFactorParamsSchema),
-	update
+  '/security',
+  authenticate({ allow: ['user.write'] }),
+  validateParams(toggleTwoFactorParamsSchema),
+  update
 );
 
 export { profileRouter };

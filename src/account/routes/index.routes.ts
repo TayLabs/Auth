@@ -4,7 +4,7 @@ import { securityRouter } from './security.routes';
 import { profileRouter } from './profile.routes';
 import { deleteAccountRouter } from './deleteAccount.routes';
 
-const accountRoutes = express.Router();
+const accountRoutes = express.Router({ mergeParams: true });
 
 accountRoutes.use('/account/security', securityRouter);
 accountRoutes.use('/account/security/totp', totpRouter);

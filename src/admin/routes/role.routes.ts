@@ -17,7 +17,7 @@ import {
 } from '../dto/roles/update.dto';
 import { getAllRolesParamSchema } from '../dto/roles/getAll.dto';
 
-const roleRouter = Router();
+const roleRouter = Router({ mergeParams: true });
 
 roleRouter.get(
   '/',

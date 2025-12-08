@@ -5,7 +5,7 @@ import { resetPasswordRouter } from './resetPassword.routes';
 import { verifyEmailRouter } from './verifyEmail.routes';
 import logoutRouter from './logout.routes';
 
-const authRoutes = express.Router();
+const authRoutes = express.Router({ mergeParams: true });
 
 authRoutes.use('/auth', loginRouter);
 authRoutes.use('/auth/totp', totpRouter);

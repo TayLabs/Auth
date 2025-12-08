@@ -10,7 +10,7 @@ import {
 } from '../controllers/totp.controllers';
 import totpVerifyBodySchema from '@/account/dto/totpVerify.dto';
 
-const totpRouter = Router();
+const totpRouter = Router({ mergeParams: true });
 
 totpRouter.post(
   '/create',
