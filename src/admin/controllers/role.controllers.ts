@@ -1,85 +1,94 @@
 import { controller } from '@/middleware/controller.middleware';
 import HttpStatus from '@/types/HttpStatus.enum';
-import type { AddRoleReqBody, AddRoleResBody } from '../dto/roles/add.dto';
+import type {
+  AddRoleReqBody,
+  AddRoleReqParams,
+  AddRoleResBody,
+} from '../dto/roles/add.dto';
 import type {
   DeleteRoleReqParams,
   DeleteRoleResBody,
 } from '../dto/roles/delete.dto';
 import type {
   UpdateRoleReqBody,
+  UpdateRoleReqParams,
   UpdateRoleResBody,
 } from '../dto/roles/update.dto';
-import type { GetRoleResBody } from '../dto/roles/get.dto';
-import type { GetAllRolesResBody } from '../dto/roles/getAll.dto';
+import type { GetRoleReqParams, GetRoleResBody } from '../dto/roles/get.dto';
+import type {
+  GetAllRolesResBody,
+  GetAllRolesReqParams,
+} from '../dto/roles/getAll.dto';
+import Role from '../services/Role.service';
 
-export const getAll = controller<{}, GetAllRolesResBody>(
+export const getAll = controller<{}, GetAllRolesResBody, GetAllRolesReqParams>(
   async (req, res, _next) => {
+    const roles = await new Role(req.params.serviceId).getAll();
+
     res.status(HttpStatus.CREATED).json({
       success: true,
       data: {
-        roles: [
-          {
-            id: '5353a041-01b1-4b77-9486-14d953929352',
-            name: 'auth',
-          },
-        ],
+        roles,
       },
     });
   }
 );
 
-export const get = controller<{}, GetRoleResBody>(async (req, res, _next) => {
+export const get = controller<{}, GetRoleResBody, GetRoleReqParams>(
+  async (req, res, _next) => {
+    const role = await new Role(req.params.serviceId, req.params.roleId).get();
+
+    res.status(HttpStatus.CREATED).json({
+      success: true,
+      data: {
+        role,
+      },
+    });
+  }
+);
+
+export const add = controller<AddRoleReqBody, AddRoleResBody, AddRoleReqParams>(
+  async (req, res, _next) => {
+    const role = await new Role(req.params.serviceId).create(req.body);
+
+    res.status(HttpStatus.CREATED).json({
+      success: true,
+      data: {
+        role,
+      },
+    });
+  }
+);
+
+export const update = controller<
+  UpdateRoleReqBody,
+  UpdateRoleResBody,
+  UpdateRoleReqParams
+>(async (req, res, _next) => {
+  const role = await new Role(req.params.roleId).update({
+    ...req.body,
+    serviceId: req.params.serviceId,
+  });
+
   res.status(HttpStatus.CREATED).json({
     success: true,
     data: {
-      role: {
-        id: '5353a041-01b1-4b77-9486-14d953929352',
-        name: 'auth',
-      },
+      role,
     },
   });
 });
-
-export const add = controller<AddRoleReqBody, AddRoleResBody>(
-  async (req, res, _next) => {
-    res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: {
-        role: {
-          id: '5353a041-01b1-4b77-9486-14d953929352',
-          name: 'auth',
-        },
-      },
-    });
-  }
-);
-
-export const update = controller<UpdateRoleReqBody, UpdateRoleResBody>(
-  async (req, res, _next) => {
-    res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: {
-        role: {
-          id: '5353a041-01b1-4b77-9486-14d953929352',
-          name: 'auth',
-        },
-      },
-    });
-  }
-);
 
 export const deleteRole = controller<
   {},
   DeleteRoleResBody,
   DeleteRoleReqParams
 >(async (req, res, _next) => {
+  const role = await new Role(req.params.serviceId, req.params.roleId).delete();
+
   res.status(HttpStatus.CREATED).json({
     success: true,
     data: {
-      role: {
-        id: '5353a041-01b1-4b77-9486-14d953929352',
-        name: 'auth',
-      },
+      role,
     },
   });
 });

@@ -3,10 +3,8 @@ import type { ResponseBody } from '@/types/ResponseBody';
 import type { UUID } from 'node:crypto';
 
 const deleteRoleParamSchema = z.object({
-  name: z
-    .string('Must be a valid string')
-    .min(1, 'Too short')
-    .max(128, 'Too long'),
+  serviceId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
+  roleId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 });
 
 type DeleteRoleReqParams = z.infer<typeof deleteRoleParamSchema>;

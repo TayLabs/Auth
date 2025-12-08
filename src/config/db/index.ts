@@ -7,7 +7,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
 });
 pool.on('connect', () => {
-  console.log('🔌 Database connection established successfully.');
+  // console.log('🔌 Database connection established successfully.');
 });
 pool.on('error', (err) => {
   if (err instanceof DatabaseError && err.code === '57P01') return; // Ignore 'admin shutdown' errors
@@ -17,5 +17,6 @@ pool.on('error', (err) => {
 });
 
 const db = drizzle({ client: pool, schema });
+console.log('🔌 Database connection established successfully.');
 
 export { db, pool };

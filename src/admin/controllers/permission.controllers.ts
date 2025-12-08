@@ -1,79 +1,90 @@
 import { controller } from '@/middleware/controller.middleware';
-import {
+import type {
   AddPermissionReqBody,
+  AddPermissionReqParams,
   AddPermissionResBody,
 } from '../dto/permissions/add.dto';
 import HttpStatus from '@/types/HttpStatus.enum';
-import {
+import type {
   DeletePermissionReqParams,
   DeletePermissionResBody,
 } from '../dto/permissions/delete.dto';
-import {
+import type {
   UpdatePermissionReqBody,
+  UpdatePermissionReqParams,
   UpdatePermissionResBody,
 } from '../dto/permissions/update.dto';
-import { GetPermissionResBody } from '../dto/permissions/get.dto';
-import { GetAllPermissionsResBody } from '../dto/permissions/getAll.dto';
+import type {
+  GetPermissionReqParams,
+  GetPermissionResBody,
+} from '../dto/permissions/get.dto';
+import type {
+  GetAllPermissionsReqParams,
+  GetAllPermissionsResBody,
+} from '../dto/permissions/getAll.dto';
+import Permission from '../services/Permission.service';
 
-export const getAll = controller<{}, GetAllPermissionsResBody>(
-  async (req, res, _next) => {
-    res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: {
-        permissions: [
-          {
-            id: '5353a041-01b1-4b77-9486-14d953929352',
-            resource: 'user',
-            action: 'read',
-          },
-        ],
-      },
-    });
-  }
-);
-
-export const get = controller<{}, GetPermissionResBody>(
-  async (req, res, _next) => {
-    res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: {
-        permission: {
-          id: '5353a041-01b1-4b77-9486-14d953929352',
-          resource: 'user',
-          action: 'read',
-        },
-      },
-    });
-  }
-);
-
-export const add = controller<AddPermissionReqBody, AddPermissionResBody>(
-  async (req, res, _next) => {
-    res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: {
-        permission: {
-          id: '5353a041-01b1-4b77-9486-14d953929352',
-          resource: 'user',
-          action: 'read',
-        },
-      },
-    });
-  }
-);
-
-export const update = controller<
-  UpdatePermissionReqBody,
-  UpdatePermissionResBody
+export const getAll = controller<
+  {},
+  GetAllPermissionsResBody,
+  GetAllPermissionsReqParams
 >(async (req, res, _next) => {
+  const permissions = await new Permission(req.params.serviceId).getAll();
+
+  res.status(HttpStatus.OK).json({
+    success: true,
+    data: {
+      permissions,
+    },
+  });
+});
+
+export const get = controller<{}, GetPermissionResBody, GetPermissionReqParams>(
+  async (req, res, _next) => {
+    const permission = await new Permission(
+      req.params.serviceId,
+      req.params.permissionId
+    ).get();
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      data: {
+        permission,
+      },
+    });
+  }
+);
+
+export const add = controller<
+  AddPermissionReqBody,
+  AddPermissionResBody,
+  AddPermissionReqParams
+>(async (req, res, _next) => {
+  const permission = await new Permission(req.params.serviceId).create(
+    req.body
+  );
+
   res.status(HttpStatus.CREATED).json({
     success: true,
     data: {
-      permission: {
-        id: '5353a041-01b1-4b77-9486-14d953929352',
-        resource: 'user',
-        action: 'read',
-      },
+      permission,
+    },
+  });
+});
+
+export const update = controller<
+  UpdatePermissionReqBody,
+  UpdatePermissionResBody,
+  UpdatePermissionReqParams
+>(async (req, res, _next) => {
+  const permission = await new Permission(req.params.permissionId).update(
+    req.body
+  );
+
+  res.status(HttpStatus.OK).json({
+    success: true,
+    data: {
+      permission,
     },
   });
 });
@@ -83,14 +94,12 @@ export const deletePermission = controller<
   DeletePermissionResBody,
   DeletePermissionReqParams
 >(async (req, res, _next) => {
-  res.status(HttpStatus.CREATED).json({
+  const permission = await new Permission(req.params.permissionId).delete();
+
+  res.status(HttpStatus.OK).json({
     success: true,
     data: {
-      permission: {
-        id: '5353a041-01b1-4b77-9486-14d953929352',
-        resource: 'user',
-        action: 'read',
-      },
+      permission,
     },
   });
 });

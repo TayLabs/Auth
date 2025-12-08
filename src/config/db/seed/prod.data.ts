@@ -37,10 +37,12 @@ const prod = {
   roles: [
     {
       id: '23e28142-85b2-412a-8e20-eeed89bbfa04',
+      serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
       name: 'admin',
     },
     {
       id: 'e5075ee5-2083-4018-bd78-6e266662067d',
+      serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
       name: 'user',
       assignToNewUser: true,
     },

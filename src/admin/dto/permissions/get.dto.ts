@@ -1,12 +1,11 @@
 import z from 'zod';
 import type { ResponseBody } from '@/types/ResponseBody';
 import type { Permission } from '@/admin/interfaces/permission.interface';
+import type { UUID } from 'node:crypto';
 
 const getPermissionParamSchema = z.object({
-  name: z
-    .string('Must be a valid string')
-    .min(1, 'Too short')
-    .max(128, 'Too long'),
+  serviceId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
+  permissionId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 });
 
 type GetPermissionReqParams = z.infer<typeof getPermissionParamSchema>;

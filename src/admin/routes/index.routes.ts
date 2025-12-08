@@ -6,7 +6,7 @@ import { serviceRouter } from './service.routes';
 const adminRoutes = express.Router();
 
 adminRoutes.use('/admin/services', serviceRouter);
-adminRoutes.use('/admin/roles', roleRouter);
-adminRoutes.use('/admin/permissions', permissionRouter);
+adminRoutes.use('/admin/services/:serviceId/roles', roleRouter);
+adminRoutes.use('/admin/services/:serviceId/permissions', permissionRouter);
 
 export { adminRoutes };

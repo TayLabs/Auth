@@ -29,7 +29,7 @@ serviceRouter.post(
   register
 );
 serviceRouter.patch(
-  '/',
+  '/:serviceId',
   authenticate({ allow: ['service.write'] }),
   validateBody(updateServiceBodySchema),
   update
