@@ -15,11 +15,12 @@ export const loginController = controller<LoginReqBody, LoginResBody>(
     const user = await User.login(req.body.email, req.body.password);
 
     // Issue new tokens (partial if 2fa is enabled)
-    const { accessToken } = await new Token(req, res).create(user);
+    const { pending, accessToken } = await new Token(req, res).create(user);
 
     res.status(HttpStatus.OK).json({
       success: true,
       data: {
+        pending,
         user: {
           id: user.id,
           email: user.email,
@@ -41,7 +42,7 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
       lastName: req.body.lastName,
     });
 
-    const { accessToken } = await new Token(req, res).create(user);
+    const { pending, accessToken } = await new Token(req, res).create(user);
 
     // Send email verification email
     const { token, email } = await EmailVerification.create(req.user.id);
@@ -65,6 +66,7 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
     res.status(HttpStatus.CREATED).json({
       success: true,
       data: {
+        pending,
         user: {
           id: user.id,
           email: user.email,
@@ -80,11 +82,12 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
 
 export const refreshController = controller<RefreshReqBody, RefreshResBody>(
   async (req, res, _next) => {
-    const { accessToken } = await new Token(req, res).refresh();
+    const { pending, accessToken } = await new Token(req, res).refresh();
 
     res.status(HttpStatus.OK).json({
       success: true,
       data: {
+        pending,
         accessToken,
       },
     });

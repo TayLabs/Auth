@@ -2,6 +2,7 @@ import env from '@/types/env';
 import { type ResponseBody } from '@/types/ResponseBody';
 import { type UUID } from 'node:crypto';
 import z from 'zod';
+import type { PendingActionType } from '../services/Token.service';
 
 const passwordValidation = z
   .string('Password must be a valid string')
@@ -40,6 +41,7 @@ const signupBodySchema = z
 
 type SignupReqBody = z.infer<typeof signupBodySchema>;
 type SignupResBody = ResponseBody<{
+  pending: PendingActionType;
   user: {
     id: UUID;
     email: string;
