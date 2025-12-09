@@ -51,6 +51,10 @@ const envSchema = z.object({
       };
     }),
   MAIL_API_KEY: z.string('Must include api key for mail service'),
+  API_KEY_TTL: z
+    .string()
+    .regex(/^\d+(h|d)$/, 'Must be a valid length of days (suffix: d)')
+    .default('30d'),
   ACCESS_TOKEN_SECRET: z
     .string('Must be a valid string of characters')
     .min(6, 'Must be at least 6 characters long')

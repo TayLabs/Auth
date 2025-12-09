@@ -104,6 +104,13 @@ const prod = {
       action: 'write',
       roles: ['admin'],
     },
+    {
+      id: '9ba8fc1c-cd43-4fb6-8e66-e6348caba223',
+      serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
+      resource: 'key',
+      action: 'write',
+      roles: ['admin'],
+    },
   ] satisfies (typeof permissionTable.$inferInsert & {
     roles: string[];
   })[],

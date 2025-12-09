@@ -11,6 +11,7 @@ import { accountRoutes } from './account/routes/index.routes';
 import { adminRoutes } from './admin/routes/index.routes';
 import { csrf } from './middleware/csrf.middleware';
 import { globalRateLimit } from './middleware/rateLimiters/index.limiter';
+import { apiKeyRouter } from './apiKey/routes/index.routes';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use(useragent());
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', accountRoutes);
 app.use('/api/v1', adminRoutes);
+app.use('/api/v1', apiKeyRouter);
 
 // Handle 404 - Not Found
 app.use(notFoundHandler);
