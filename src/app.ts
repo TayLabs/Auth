@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { accountRoutes } from './account/routes/index.routes';
 import { adminRoutes } from './admin/routes/index.routes';
 import { csrf } from './middleware/csrf.middleware';
+import { globalRateLimit } from './middleware/rateLimiters/index.limiter';
 
 const app = express();
 
@@ -33,6 +34,9 @@ app.disable('x-powered-by'); // Disable the 'X-Powered-By' header for security (
 
 // CSRF protection middleware
 app.use(csrf);
+
+// Global rate limiting
+app.use(globalRateLimit);
 
 // Useragent detection middleware
 app.use(useragent());
