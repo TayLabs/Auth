@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import authenticate from '@/middleware/authenticate.middleware';
 import { validateParams } from '@/middleware/validate.middleware';
-import toggleTwoFactorParamsSchema from '../dto/toggleTwoFactor.dto';
 import { update } from '../controllers/profile.controllers';
+import updateBodySchema from '../dto/profile/update.dto';
 
 // /account/profile/*
 const profileRouter = Router({ mergeParams: true });
 
 profileRouter.patch(
-  '/security',
+  '/',
   authenticate({ allow: ['user.write'] }),
-  validateParams(toggleTwoFactorParamsSchema),
+  validateParams(updateBodySchema),
   update
 );
 
