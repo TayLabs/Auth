@@ -3,7 +3,7 @@ import parseTTL from '../utils/parseTTL.utils';
 import env from '@/types/env';
 
 type Cookie = {
-  name: string | ((sessionId: string) => string);
+  name: string;
   options: CookieOptions;
 };
 
@@ -22,13 +22,13 @@ export const selectedSessionCookie: Cookie = {
   options: {
     domain: `.${env.HOST_DOMAIN}`,
     sameSite: 'lax',
-    expires: new Date(2038, 12, 31), // Never expires (not future proof but account's for the unix Year 2038 problem in browsers)
+    expires: new Date(2038, 11, 31), // Never expires (not future proof but account's for the unix Year 2038 problem in browsers)
     httpOnly: false,
   },
 };
 
-export const sessionCookie: Cookie = {
-  name: (sessionId: string) => `_s_${sessionId}`,
+export const sessionCookie: (sessionId: string) => Cookie = (sessionId) => ({
+  name: `_s_${sessionId}`,
   options: {
     domain: `.${env.HOST_DOMAIN}`,
     sameSite: 'lax',
@@ -37,7 +37,7 @@ export const sessionCookie: Cookie = {
     ),
     httpOnly: true,
   },
-};
+});
 
 export const accessTokenCookie: Cookie = {
   name: '_access_t',
