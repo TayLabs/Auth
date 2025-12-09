@@ -9,15 +9,16 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { accountRoutes } from './account/routes/index.routes';
 import { adminRoutes } from './admin/routes/index.routes';
+import { csrf } from './middleware/csrf.middleware';
 
 const app = express();
 
 // CORS
 app.use(
-	cors({
-		origin: true,
-		credentials: true,
-	})
+  cors({
+    origin: true,
+    credentials: true,
+  })
 );
 
 // Parse application/x-www-form-urlencoded and application/json requests
@@ -29,6 +30,9 @@ app.use(cookieParser());
 // Security middleware
 app.use(helmet());
 app.disable('x-powered-by'); // Disable the 'X-Powered-By' header for security (normally includes framework being used)
+
+// CSRF protection middleware
+app.use(csrf);
 
 // Useragent detection middleware
 app.use(useragent());

@@ -44,6 +44,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@dr.pogodin/csurf": "^1.16.6",
     "argon2": "^0.44.0",
     "axios": "^1.13.2",
     "body-parser": "^2.2.0",
