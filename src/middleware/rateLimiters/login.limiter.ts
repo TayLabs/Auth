@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 
 export const failedLoginRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 5 * 60 * 1000,
   limit: 5,
   skipSuccessfulRequests: true,
   standardHeaders: 'draft-8',
@@ -10,7 +10,7 @@ export const failedLoginRateLimit = rateLimit({
 });
 
 export const successfulLoginRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 5 * 60 * 1000,
   limit: 5,
   skipFailedRequests: true,
   standardHeaders: 'draft-8',
