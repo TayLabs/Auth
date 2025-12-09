@@ -2,9 +2,9 @@ import redisClient from '@/config/redis/client';
 import rateLimit from 'express-rate-limit';
 import RedisStore, { type RedisReply } from 'rate-limit-redis';
 
-export const globalRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
+export const verifyEmailLimiter = rateLimit({
+  windowMs: 2 * 60 * 1000,
+  limit: 1,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,

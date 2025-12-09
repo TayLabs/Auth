@@ -1,4 +1,6 @@
+import redisClient from '@/config/redis/client';
 import rateLimit from 'express-rate-limit';
+import RedisStore, { type RedisReply } from 'rate-limit-redis';
 
 export const failedLoginRateLimit = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -7,6 +9,10 @@ export const failedLoginRateLimit = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,
+  store: new RedisStore({
+    sendCommand: async (command: string, ...args: string[]) =>
+      (await redisClient.call(command, ...args)) as RedisReply,
+  }),
 });
 
 export const successfulLoginRateLimit = rateLimit({
@@ -16,6 +22,10 @@ export const successfulLoginRateLimit = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,
+  store: new RedisStore({
+    sendCommand: async (command: string, ...args: string[]) =>
+      (await redisClient.call(command, ...args)) as RedisReply,
+  }),
 });
 
 export const signUpRateLimit = rateLimit({
@@ -25,6 +35,10 @@ export const signUpRateLimit = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,
+  store: new RedisStore({
+    sendCommand: async (command: string, ...args: string[]) =>
+      (await redisClient.call(command, ...args)) as RedisReply,
+  }),
 });
 
 export const refreshRateLimit = rateLimit({
@@ -33,4 +47,8 @@ export const refreshRateLimit = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,
+  store: new RedisStore({
+    sendCommand: async (command: string, ...args: string[]) =>
+      (await redisClient.call(command, ...args)) as RedisReply,
+  }),
 });

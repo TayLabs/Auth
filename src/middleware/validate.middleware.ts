@@ -61,9 +61,13 @@ export function validateQueryParams<T extends ZodType>(
 ): RequestHandler<any, ResponseBody> {
   return async (req, res, next) => {
     try {
-      const validatedParams = await schema.parseAsync(req.query);
-      // @ts-expect-error
-      req.query = validatedParams;
+      const validatedQuery = await schema.parseAsync(req.query);
+
+      Object.defineProperty(req, 'query', {
+        ...Object.getOwnPropertyDescriptor(req, 'query'),
+        value: validatedQuery,
+        writable: true,
+      });
       next();
     } catch (err) {
       if (err instanceof ZodError) {
