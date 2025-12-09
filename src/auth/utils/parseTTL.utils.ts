@@ -27,6 +27,7 @@ export default function parseTTL(ttl: string) {
   }
 
   return {
+    milliseconds: timeInSeconds * 1000,
     seconds: timeInSeconds,
     minutes: timeInSeconds / 60,
     hours: timeInSeconds / 60 / 60,
