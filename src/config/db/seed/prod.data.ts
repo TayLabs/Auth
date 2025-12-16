@@ -35,7 +35,7 @@ const prod = {
 		},
 		{
 			id: '61b6ec0f-81a1-4a0c-a0e7-c13917937fa7',
-			name: 'auth',
+			name: 'keys',
 		},
 	] satisfies (typeof serviceTable.$inferInsert)[],
 	roles: [

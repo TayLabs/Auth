@@ -4,38 +4,36 @@ import loginBodySchema from '../dto/login.dto';
 import signupBodySchema from '../dto/signup.dto';
 import refreshBodySchema from '../dto/refresh.dto';
 import {
-  loginController,
-  refreshController,
-  signupController,
+	loginController,
+	refreshController,
+	signupController,
 } from '../controllers/login.controllers';
 import {
-  failedLoginRateLimit,
-  successfulLoginRateLimit,
-  refreshRateLimit,
-  signUpRateLimit,
+	loginRateLimit,
+	refreshRateLimit,
+	signUpRateLimit,
 } from '@/middleware/rateLimiters/login.limiter';
 
 // /auth/*
 const loginRouter = express.Router({ mergeParams: true });
 
 loginRouter.post(
-  '/login',
-  failedLoginRateLimit,
-  successfulLoginRateLimit,
-  validateBody(loginBodySchema),
-  loginController
+	'/login',
+	loginRateLimit,
+	validateBody(loginBodySchema),
+	loginController
 );
 loginRouter.post(
-  '/signup',
-  signUpRateLimit,
-  validateBody(signupBodySchema),
-  signupController
+	'/signup',
+	signUpRateLimit,
+	validateBody(signupBodySchema),
+	signupController
 );
 loginRouter.post(
-  '/refresh',
-  refreshRateLimit,
-  validateBody(refreshBodySchema),
-  refreshController
+	'/refresh',
+	refreshRateLimit,
+	validateBody(refreshBodySchema),
+	refreshController
 );
 
 export { loginRouter };
