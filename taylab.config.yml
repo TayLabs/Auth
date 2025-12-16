@@ -1,0 +1,7 @@
+service: 'auth'
+
+permissions:
+  - 'user:write'
+  - 'user:read'
+  - 'admin:write'
+  - 'admin:read'

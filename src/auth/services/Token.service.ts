@@ -178,9 +178,9 @@ export default class Token {
         selectedSessionCookie.options
       );
       this._res.cookie(
-        sessionCookie.name(sessionId),
+        sessionCookie(sessionId).name,
         refreshToken,
-        sessionCookie.options
+        sessionCookie(sessionId).options
       );
 
       // Create Access JWT
@@ -271,10 +271,10 @@ export default class Token {
     const sessionKey = `session:${sessionId}`;
 
     // Validate the old refresh token
-    const token = this._req.cookies[sessionCookie.name(sessionId)] as string;
+    const token = this._req.cookies[sessionCookie(sessionId).name] as string;
     if (!token) {
       throw new AppError(
-        'Session does not exist, please login again',
+        'Cannot find session, please login again',
         HttpStatus.UNAUTHORIZED
       );
     }
@@ -360,9 +360,9 @@ export default class Token {
       }
     );
     this._res.cookie(
-      sessionCookie.name(sessionId),
+      sessionCookie(sessionId).name,
       newRefreshToken,
-      sessionCookie.options
+      sessionCookie(sessionId).options
     );
 
     let pending: PendingActionType = null;
@@ -490,6 +490,8 @@ export default class Token {
     for (const record of deviceRecords) {
       await redisClient.del(record.sessionId);
     }
+
+    this._res.clearCookie(accessTokenCookie.name); // clear access token for requesting user for immediate effect
 
     return { sessionIds: deviceRecords.map((r) => r.sessionId) };
   }

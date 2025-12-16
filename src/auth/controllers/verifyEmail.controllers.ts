@@ -10,8 +10,6 @@ import {
   SendVerifyEmailReqBody,
   SendVerifyEmailResBody,
 } from '../dto/sendVerifyEmail.dto';
-import env from '@/types/env';
-import AppError from '@/types/AppError';
 import Token from '../services/Token.service';
 
 export const sendVerify = controller<

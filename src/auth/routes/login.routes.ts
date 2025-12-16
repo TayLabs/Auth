@@ -8,14 +8,30 @@ import {
 	refreshController,
 	signupController,
 } from '../controllers/login.controllers';
+import {
+	loginRateLimit,
+	refreshRateLimit,
+	signUpRateLimit,
+} from '@/middleware/rateLimiters/login.limiter';
 
 // /auth/*
-const loginRouter = express.Router();
+const loginRouter = express.Router({ mergeParams: true });
 
-loginRouter.post('/login', validateBody(loginBodySchema), loginController);
-loginRouter.post('/signup', validateBody(signupBodySchema), signupController);
+loginRouter.post(
+	'/login',
+	loginRateLimit,
+	validateBody(loginBodySchema),
+	loginController
+);
+loginRouter.post(
+	'/signup',
+	signUpRateLimit,
+	validateBody(signupBodySchema),
+	signupController
+);
 loginRouter.post(
 	'/refresh',
+	refreshRateLimit,
 	validateBody(refreshBodySchema),
 	refreshController
 );

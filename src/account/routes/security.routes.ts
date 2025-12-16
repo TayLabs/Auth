@@ -4,11 +4,12 @@ import { validateParams } from '@/middleware/validate.middleware';
 import toggleTwoFactorParamsSchema from '../dto/toggleTwoFactor.dto';
 import { toggleTwoFactor } from '../controllers/security.controllers';
 
-const securityRouter = Router();
+// /account/security/*
+const securityRouter = Router({ mergeParams: true });
 
 securityRouter.patch(
-  '/security/two-factor/:switch',
-  authenticate(),
+  '/two-factor/:switch',
+  authenticate({ allow: ['user.write'] }),
   validateParams(toggleTwoFactorParamsSchema),
   toggleTwoFactor
 );

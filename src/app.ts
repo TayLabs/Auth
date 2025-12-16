@@ -9,6 +9,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { accountRoutes } from './account/routes/index.routes';
 import { adminRoutes } from './admin/routes/index.routes';
+import { csrf } from './middleware/csrf.middleware';
+import { globalRateLimit } from './middleware/rateLimiters/index.limiter';
 
 const app = express();
 
@@ -29,6 +31,12 @@ app.use(cookieParser());
 // Security middleware
 app.use(helmet());
 app.disable('x-powered-by'); // Disable the 'X-Powered-By' header for security (normally includes framework being used)
+
+// CSRF protection middleware
+app.use(csrf);
+
+// Global rate limiting
+app.use(globalRateLimit);
 
 // Useragent detection middleware
 app.use(useragent());

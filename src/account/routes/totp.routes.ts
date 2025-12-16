@@ -4,33 +4,33 @@ import { Router } from 'express';
 import totpCreateBodySchema from '../dto/totpCreate.dto';
 import totpRemoveParamsSchema from '../dto/totpRemove.dto';
 import {
-	totpCreateController,
-	totpRemoveController,
-	totpVerifyController,
+  totpCreateController,
+  totpRemoveController,
+  totpVerifyController,
 } from '../controllers/totp.controllers';
 import totpVerifyBodySchema from '@/account/dto/totpVerify.dto';
 
-const totpRouter = Router();
+const totpRouter = Router({ mergeParams: true });
 
 totpRouter.post(
-	'/totp/create',
-	authenticate({ allow: ['user.write'] }),
-	validateBody(totpCreateBodySchema),
-	totpCreateController
+  '/create',
+  authenticate({ allow: ['user.write'] }),
+  validateBody(totpCreateBodySchema),
+  totpCreateController
 );
 
 totpRouter.post(
-	'/verify/:totpTokenId',
-	authenticate({ allow: ['user.write'] }),
-	validateBody(totpVerifyBodySchema),
-	totpVerifyController
+  '/verify/:totpTokenId',
+  authenticate({ allow: ['user.write'] }),
+  validateBody(totpVerifyBodySchema),
+  totpVerifyController
 );
 
 totpRouter.delete(
-	'/totp/remove/:totpTokenId',
-	authenticate({ allow: ['user.write'] }),
-	validateParams(totpRemoveParamsSchema),
-	totpRemoveController
+  '/remove/:totpTokenId',
+  authenticate({ allow: ['user.write'] }),
+  validateParams(totpRemoveParamsSchema),
+  totpRemoveController
 );
 
 export { totpRouter };

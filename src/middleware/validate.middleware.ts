@@ -35,7 +35,7 @@ export function validateParams<T extends ZodType>(
   return async (req, res, next) => {
     try {
       const validatedParams = await schema.parseAsync(req.params);
-      req.body = validatedParams;
+      req.params = validatedParams;
       next();
     } catch (err) {
       if (err instanceof ZodError) {
@@ -61,8 +61,13 @@ export function validateQueryParams<T extends ZodType>(
 ): RequestHandler<any, ResponseBody> {
   return async (req, res, next) => {
     try {
-      const validatedParams = await schema.parseAsync(req.query);
-      req.body = validatedParams;
+      const validatedQuery = await schema.parseAsync(req.query);
+
+      Object.defineProperty(req, 'query', {
+        ...Object.getOwnPropertyDescriptor(req, 'query'),
+        value: validatedQuery,
+        writable: true,
+      });
       next();
     } catch (err) {
       if (err instanceof ZodError) {

@@ -8,13 +8,16 @@ import {
 	validateBody,
 	validateQueryParams,
 } from '@/middleware/validate.middleware';
-import { resetBodySchema, resetQueryParamsSchema } from '../dto/reset.dto';
-import { sendResetLinkBodySchema } from '../dto/sendResetLink.dto';
+import {
+	resetBodySchema,
+	resetQueryParamsSchema,
+} from '../dto/password/reset.dto';
+import { sendResetLinkBodySchema } from '../dto/password/sendResetLink.dto';
 import { changeBodySchema } from '../dto/password/change.dto';
 import authenticate from '@/middleware/authenticate.middleware';
 
 // /auth/password/*
-const resetPasswordRouter = express.Router();
+const resetPasswordRouter = express.Router({ mergeParams: true });
 
 resetPasswordRouter.post(
 	'/reset/request',

@@ -45,7 +45,7 @@ export const signupController = controller<SignupReqBody, SignupResBody>(
     const { pending, accessToken } = await new Token(req, res).create(user);
 
     // Send email verification email
-    const { token, email } = await EmailVerification.create(req.user.id);
+    const { token, email } = await EmailVerification.create(user.id);
 
     const resetUrl = `${req.body.linkBaseUrl}?t=${token}`;
 
