@@ -1,7 +1,26 @@
-service: 'auth'
+service: auth
 
 permissions:
-  - 'user:write'
-  - 'user:read'
-  - 'admin:write'
-  - 'admin:read'
+  - user.read: 'Read user data'
+    allowKey: false
+
+  - user.write: 'Write user data'
+    allowKey: false
+
+  - service.read: 'Read all services'
+    allowKey: true
+
+  - service.write: 'Modify all services'
+    allowKey: true
+
+  - role.read: 'Read all roles'
+    allowKey: true
+
+  - role.write: 'Modify any role'
+    allowKey: true
+
+  - permission.read: 'Read all permissions'
+    allowKey: true
+
+  - permission.write: 'Modify all permissions'
+    allowKey: true
