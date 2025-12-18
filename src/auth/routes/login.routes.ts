@@ -9,8 +9,7 @@ import {
   signupController,
 } from '../controllers/login.controllers';
 import {
-  failedLoginRateLimit,
-  successfulLoginRateLimit,
+  loginRateLimit,
   refreshRateLimit,
   signUpRateLimit,
 } from '@/middleware/rateLimiters/login.limiter';
@@ -20,8 +19,7 @@ const loginRouter = express.Router({ mergeParams: true });
 
 loginRouter.post(
   '/login',
-  failedLoginRateLimit,
-  successfulLoginRateLimit,
+  loginRateLimit,
   validateBody(loginBodySchema),
   loginController
 );
