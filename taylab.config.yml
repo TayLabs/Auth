@@ -3,32 +3,46 @@ service: auth
 permissions:
   - key: 'user.read'
     description: 'Read user data'
-    allowKey: false
+    scopes:
+      - 'user'
 
   - key: 'user.write'
     description: 'Write user data'
-    allowKey: false
+    scopes:
+      - 'user'
 
   - key: 'service.read'
     description: 'Read all services'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
 
   - key: 'service.write'
     description: 'Modify all services'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
 
   - key: 'role.read'
     description: 'Read all roles'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
 
   - key: 'role.write'
     description: 'Modify any role'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
 
   - key: 'permission.read'
     description: 'Read all permissions'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
 
   - key: 'permission.write'
     description: 'Modify all permissions'
-    allowKey: true
+    scopes:
+      - 'user'
+      - 'api-key'
