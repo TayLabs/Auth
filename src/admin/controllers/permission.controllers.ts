@@ -1,105 +1,105 @@
 import { controller } from '@/middleware/controller.middleware';
 import type {
-  AddPermissionReqBody,
-  AddPermissionReqParams,
-  AddPermissionResBody,
+	AddPermissionReqBody,
+	AddPermissionReqParams,
+	AddPermissionResBody,
 } from '../dto/permissions/add.dto';
 import HttpStatus from '@/types/HttpStatus.enum';
 import type {
-  DeletePermissionReqParams,
-  DeletePermissionResBody,
+	DeletePermissionReqParams,
+	DeletePermissionResBody,
 } from '../dto/permissions/delete.dto';
 import type {
-  UpdatePermissionReqBody,
-  UpdatePermissionReqParams,
-  UpdatePermissionResBody,
+	UpdatePermissionReqBody,
+	UpdatePermissionReqParams,
+	UpdatePermissionResBody,
 } from '../dto/permissions/update.dto';
 import type {
-  GetPermissionReqParams,
-  GetPermissionResBody,
+	GetPermissionReqParams,
+	GetPermissionResBody,
 } from '../dto/permissions/get.dto';
 import type {
-  GetAllPermissionsReqParams,
-  GetAllPermissionsResBody,
+	GetAllPermissionsReqParams,
+	GetAllPermissionsResBody,
 } from '../dto/permissions/getAll.dto';
 import Permission from '../services/Permission.service';
 
 export const getAll = controller<
-  {},
-  GetAllPermissionsResBody,
-  GetAllPermissionsReqParams
+	{},
+	GetAllPermissionsResBody,
+	GetAllPermissionsReqParams
 >(async (req, res, _next) => {
-  const permissions = await new Permission(req.params.serviceId).getAll();
+	const permissions = await new Permission(req.params.serviceId).getAll();
 
-  res.status(HttpStatus.OK).json({
-    success: true,
-    data: {
-      permissions,
-    },
-  });
+	res.status(HttpStatus.OK).json({
+		success: true,
+		data: {
+			permissions,
+		},
+	});
 });
 
 export const get = controller<{}, GetPermissionResBody, GetPermissionReqParams>(
-  async (req, res, _next) => {
-    const permission = await new Permission(
-      req.params.serviceId,
-      req.params.permissionId
-    ).get();
+	async (req, res, _next) => {
+		const permission = await new Permission(
+			req.params.serviceId,
+			req.params.permissionId
+		).get();
 
-    res.status(HttpStatus.OK).json({
-      success: true,
-      data: {
-        permission,
-      },
-    });
-  }
+		res.status(HttpStatus.OK).json({
+			success: true,
+			data: {
+				permission,
+			},
+		});
+	}
 );
 
 export const add = controller<
-  AddPermissionReqBody,
-  AddPermissionResBody,
-  AddPermissionReqParams
+	AddPermissionReqBody,
+	AddPermissionResBody,
+	AddPermissionReqParams
 >(async (req, res, _next) => {
-  const permission = await new Permission(req.params.serviceId).create(
-    req.body
-  );
+	const permission = await new Permission(req.params.serviceId).create(
+		req.body
+	);
 
-  res.status(HttpStatus.CREATED).json({
-    success: true,
-    data: {
-      permission,
-    },
-  });
+	res.status(HttpStatus.CREATED).json({
+		success: true,
+		data: {
+			permission,
+		},
+	});
 });
 
 export const update = controller<
-  UpdatePermissionReqBody,
-  UpdatePermissionResBody,
-  UpdatePermissionReqParams
+	UpdatePermissionReqBody,
+	UpdatePermissionResBody,
+	UpdatePermissionReqParams
 >(async (req, res, _next) => {
-  const permission = await new Permission(req.params.permissionId).update(
-    req.body
-  );
+	const permission = await new Permission(req.params.permissionId).update(
+		req.body
+	);
 
-  res.status(HttpStatus.OK).json({
-    success: true,
-    data: {
-      permission,
-    },
-  });
+	res.status(HttpStatus.OK).json({
+		success: true,
+		data: {
+			permission,
+		},
+	});
 });
 
 export const deletePermission = controller<
-  {},
-  DeletePermissionResBody,
-  DeletePermissionReqParams
+	{},
+	DeletePermissionResBody,
+	DeletePermissionReqParams
 >(async (req, res, _next) => {
-  const permission = await new Permission(req.params.permissionId).delete();
+	const permission = await new Permission(req.params.permissionId).delete();
 
-  res.status(HttpStatus.OK).json({
-    success: true,
-    data: {
-      permission,
-    },
-  });
+	res.status(HttpStatus.OK).json({
+		success: true,
+		data: {
+			permission,
+		},
+	});
 });
