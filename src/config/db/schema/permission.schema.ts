@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
 import { type UUID } from 'node:crypto';
 import { serviceTable } from './service.schema';
 import { unique } from 'drizzle-orm/pg-core';
@@ -14,14 +14,13 @@ export const permissionTable = pgTable(
 				onUpdate: 'cascade',
 			})
 			.notNull(),
-		resource: varchar('resource', { length: 128 }).notNull(),
-		action: varchar('action', { length: 128 }).notNull(),
+		key: varchar('key', { length: 128 }).notNull(),
+		description: text('description'),
 	},
 	(table) => [
 		unique('service_resource_action_unique_constraint').on(
 			table.serviceId,
-			table.resource,
-			table.action
+			table.key
 		),
 	]
 );

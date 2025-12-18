@@ -10,9 +10,43 @@ import {
 	userRoleTable,
 } from '../schema/index.schema';
 import prod from './prod.data';
+import fetchPermissions from '../utils/fetchPermissions';
+import { eq, or } from 'drizzle-orm';
 
 export default async function seed(options?: { includeTestData: boolean }) {
 	try {
+		const config = await fetchPermissions();
+
+		await db.transaction(async (tx) => {
+			// insert service, roles, and permissions
+			await tx
+				.insert(serviceTable)
+				.values(
+					config.map((repo) => ({
+						name: repo.service,
+					}))
+				)
+				.onConflictDoNothing();
+
+			const services = await tx.select().from(serviceTable);
+
+			for (const service of services) {
+				const repo = config.find((repo) => repo.service === service.name);
+
+				if (repo?.permissions && repo.permissions.length > 0) {
+					await tx
+						.insert(permissionTable)
+						.values(
+							repo?.permissions.map((permission) => ({
+								...permission,
+								serviceId: service.id,
+							}))
+						)
+						.onConflictDoNothing();
+				}
+			}
+		});
+
 		await db.transaction(async (tx) => {
 			// insert user/profiles
 			const users = await tx
@@ -29,29 +63,25 @@ export default async function seed(options?: { includeTestData: boolean }) {
 			await tx.insert(profileTable).values(prod.profiles).onConflictDoNothing();
 
 			// insert service, roles, and permissions
-			await tx.insert(serviceTable).values(prod.services).onConflictDoNothing();
 			await tx.insert(roleTable).values(prod.roles).onConflictDoNothing();
 
 			for (const role of prod.roles) {
-				const filtered = prod.permissions.filter((permission) =>
-					permission.roles.includes(role.name)
-				);
-				if (filtered.length > 0) {
-					await tx
-						.insert(permissionTable)
-						.values(
-							filtered.map((permission) => ({
-								...permission,
-								roles: undefined,
-							}))
+				const permissions = await tx
+					.select()
+					.from(permissionTable)
+					.where(
+						or(
+							...role.permissions.map((permission) =>
+								eq(permissionTable.key, permission)
+							)
 						)
-						.returning()
-						.onConflictDoNothing();
+					);
 
+				if (permissions.length > 0) {
 					await tx
 						.insert(rolePermissionTable)
 						.values(
-							filtered.map((permission) => ({
+							permissions.map((permission) => ({
 								permissionId: permission.id,
 								roleId: role.id,
 							}))
