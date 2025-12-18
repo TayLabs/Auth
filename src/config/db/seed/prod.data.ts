@@ -28,21 +28,11 @@ const prod = {
 			username: 'admin',
 		},
 	] satisfies (typeof profileTable.$inferInsert)[],
-	services: [
-		{
-			id: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
-			name: 'auth',
-		},
-		{
-			id: '61b6ec0f-81a1-4a0c-a0e7-c13917937fa7',
-			name: 'keys',
-		},
-	] satisfies (typeof serviceTable.$inferInsert)[],
 	roles: [
 		{
 			id: '23e28142-85b2-412a-8e20-eeed89bbfa04',
-			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
 			name: 'admin',
+			service: 'auth',
 			permissions: [
 				'user.read',
 				'user.write',
@@ -57,12 +47,15 @@ const prod = {
 		},
 		{
 			id: 'e5075ee5-2083-4018-bd78-6e266662067d',
-			serviceId: 'b6d842b8-91be-46f7-a340-c4afb1b63a0b',
+			service: 'auth',
 			name: 'user',
 			permissions: ['user.read', 'user.write'],
 			assignToNewUser: true,
 		},
-	] satisfies (typeof roleTable.$inferInsert & { permissions: string[] })[],
+	] satisfies (Omit<typeof roleTable.$inferInsert, 'serviceId'> & {
+		service: string;
+		permissions: string[];
+	})[],
 };
 
 export default prod;
