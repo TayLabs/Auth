@@ -6,6 +6,7 @@ export const verifyEmailLimiter = rateLimit({
 	windowMs: 2 * 60 * 1000,
 	limit: 1,
 	standardHeaders: 'draft-8',
+	skipFailedRequests: true,
 	legacyHeaders: false,
 	ipv6Subnet: 56,
 	store: new RedisStore({

@@ -20,7 +20,7 @@ export const sendVerify = controller<
 
 	const resetUrl = `${req.body.linkBaseUrl}?t=${token}`;
 
-	sendMail({
+	await sendMail({
 		to: {
 			email,
 		},

@@ -43,7 +43,16 @@ export const sendMail = async (data: SendMailPayload) => {
 					data: error.response?.data,
 				});
 
-			throw new AppError(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new AppError(
+				error.message,
+				(error.status as (typeof HttpStatus)[keyof typeof HttpStatus]) ||
+					HttpStatus.INTERNAL_SERVER_ERROR
+			);
+		} else {
+			throw new AppError(
+				'Internal server error',
+				HttpStatus.INTERNAL_SERVER_ERROR
+			);
 		}
 	}
 };
