@@ -3,7 +3,7 @@ import {
 	SendResetLinkReqBody,
 	type SendResetLinkResBody,
 } from '../dto/password/sendResetLink.dto';
-import { sendMail } from '@/config/mail';
+import { sendMail } from '@/config/tayLab/mail';
 import {
 	ResetReqBody,
 	ResetReqQueryParams,

@@ -43,7 +43,7 @@ services:
       API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
     ports:
-      - '7414:7414'
+      - '4313:7414'
     healthcheck:
       test: ['CMD-SHELL', 'curl -I http://localhost:7414']
       interval: 10s
