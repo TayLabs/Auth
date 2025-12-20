@@ -14,7 +14,6 @@ import HttpStatus from '@/types/HttpStatus.enum';
 import User from '@/services/User.service';
 import { ChangeReqBody, ChangeResBody } from '../dto/password/change.dto';
 import Token from '../services/Token.service';
-import { selectedSessionCookie, sessionCookie } from '../constants/cookies';
 
 export const sendLink = controller<SendResetLinkReqBody, SendResetLinkResBody>(
 	async (req, res, _next) => {
