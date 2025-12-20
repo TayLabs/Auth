@@ -35,17 +35,59 @@ services:
       retries: 5
     profiles: ['development', 'production', 'test']
 
+  keys-postgres:
+    image: postgres:latest
+    container_name: ${CONTAINER_PREFIX:-taylab-auth}-keys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keys
+      POSTGRES_USER: tayLabKeys
+      POSTGRES_PASSWORD: onaroewth4p9g8ahsoef
+    ports:
+      - '3313:5432'
+    volumes:
+      - keys-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tayLabKeys -d keys']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ['development', 'production', 'test']
+
+  taylab-keys:
+    image: taylabs-keys # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
+    container_name: ${CONTAINER_PREFIX:-taylab-auth}-keys
+    restart: unless-stopped
+    ports:
+      - '2313:7212'
+    environment:
+      DATABASE_URL: postgres://tayLabKeys:onaroewth4p9g8ahsoef@${CONTAINER_PREFIX:-taylab-auth}-keys-postgres:5432/keys
+      ACCESS_TOKEN_SECRET: aopvnwoaht
+    depends_on:
+      keys-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -I http://localhost:7212']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ['development', 'production', 'test']
+
   taylab-mail:
     image: taylabs-mail # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-mail
     restart: unless-stopped
     environment:
+      KEY_SERVICE_BASE_URL: http://${CONTAINER_PREFIX:-taylab-auth}-keys:7212
       API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
     ports:
       - '4313:7414'
+    depends_on:
+      taylab-keys:
+        condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -I http://localhost:7414']
+      test: ['CMD-SHELL', 'curl -I http://localhost:4313']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,11 +100,11 @@ services:
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@postgres:5432/auth
+      DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@${CONTAINER_PREFIX:-taylab-auth}postgres:5432/auth
       REDIS_URI: redis:6313
-      MAIL_API: taylab-mail:7212
+      MAIL_API: ${CONTAINER_PREFIX:-taylab-auth}-mail:7212
       MAIL_API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
-      ACCESS_TOKEN_SECRET:
+      ACCESS_TOKEN_SECRET: aopvnwoaht
       REFRESH_TOKEN_SECRET:
       TOTP_ENCRYPT_KEY:
       RESET_TOKEN_HASH_KEY:
@@ -82,4 +124,4 @@ services:
 volumes:
   postgres:
   redis:
-  mail:
+  keys-postgres:
