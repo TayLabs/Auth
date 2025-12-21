@@ -1,0 +1,1 @@
+ALTER TABLE "roles" ALTER COLUMN "assign_to_new_user" SET NOT NULL;

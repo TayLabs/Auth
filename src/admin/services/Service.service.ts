@@ -100,7 +100,7 @@ export default class Service {
 			) {
 				switch (err.cause.code) {
 					case '23505': // unique_violation
-						throw new Error('A service with that name already exist'); // Should occur as .onConflictUpdate exist
+						throw new Error('A service with that name already exist');
 					case '42P01': // undefined_table
 						throw new AppError(
 							'Database table not found',
@@ -202,7 +202,7 @@ export default class Service {
 			) {
 				switch (err.cause.code) {
 					case '23505': // unique_violation
-						throw new Error('A service with that name already exist'); // Should occur as .onConflictUpdate exist
+						throw new Error('A service with that name already exist');
 					case '42P01': // undefined_table
 						throw new AppError(
 							'Database table not found',

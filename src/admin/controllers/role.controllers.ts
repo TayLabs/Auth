@@ -67,7 +67,6 @@ export const update = controller<
 >(async (req, res, _next) => {
 	const role = await new Role(req.params.serviceId, req.params.roleId).update({
 		...req.body,
-		serviceId: req.params.serviceId,
 	});
 
 	res.status(HttpStatus.CREATED).json({
