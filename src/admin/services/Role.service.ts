@@ -1,10 +1,12 @@
 import { db } from '@/config/db';
 import { roleTable } from '@/config/db/schema/role.schema';
-import { eq } from 'drizzle-orm';
+import { eq, getTableColumns } from 'drizzle-orm';
 import type { UUID } from 'node:crypto';
 import type { Role as RoleType } from '@/admin/interfaces/Role.interface';
 import HttpStatus from '@/types/HttpStatus.enum';
 import AppError from '@/types/AppError';
+import { rolePermissionTable } from '@/config/db/schema/rolePermission.schema';
+import { permissionTable } from '@/config/db/schema/permission.schema';
 
 export default class Role {
 	private _serviceId: UUID;
@@ -32,25 +34,65 @@ export default class Role {
 			await db.select().from(roleTable).where(eq(roleTable.id, this._roleId))
 		)[0];
 
-		return result;
-	}
-
-	public async create(
-		data: Omit<typeof roleTable.$inferInsert, 'id' | 'serviceId'>
-	): Promise<RoleType> {
-		const result = (
-			await db
-				.insert(roleTable)
-				.values({ ...data, serviceId: this._serviceId })
-				.returning()
-		)[0];
+		if (!result) {
+			throw new AppError(
+				'A role with that id does not exist',
+				HttpStatus.NOT_FOUND
+			);
+		}
 
 		return result;
 	}
 
-	public async update(
-		data: Omit<typeof roleTable.$inferInsert, 'id'>
-	): Promise<RoleType> {
+	public async create({
+		name,
+		assignToNewUser,
+		permissions,
+	}: {
+		name: string;
+		assignToNewUser: boolean;
+		permissions: UUID[];
+	}): Promise<RoleType> {
+		let result: RoleType;
+		await db.transaction(async (tx) => {
+			result = (
+				await tx
+					.insert(roleTable)
+					.values({ name, assignToNewUser, serviceId: this._serviceId })
+					.returning()
+			)[0] as any;
+
+			if (permissions.length > 0) {
+				await tx.insert(rolePermissionTable).values(
+					permissions.map((id) => ({
+						permissionId: id,
+						roleId: result.id,
+					}))
+				);
+			}
+
+			// Populate all permissions for role
+			result.permissions = await tx
+				.select(getTableColumns(permissionTable))
+				.from(permissionTable)
+				.innerJoin(
+					rolePermissionTable,
+					eq(rolePermissionTable.roleId, result.id)
+				);
+		});
+
+		return result!;
+	}
+
+	public async update({
+		name,
+		assignToNewUser,
+		permissions,
+	}: {
+		name?: string;
+		assignToNewUser?: boolean;
+		permissions?: UUID[];
+	}): Promise<RoleType> {
 		if (!this._roleId)
 			throw new AppError('Please specify a role id', HttpStatus.BAD_REQUEST);
 

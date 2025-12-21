@@ -14,6 +14,10 @@ const updateRoleBodySchema = z.object({
 		.min(1, 'Too short')
 		.max(128, 'Too long'),
 	assignToNewUser: z.boolean('Invalid boolean value').optional(),
+	permissions: z.array(
+		z.uuid('Invalid UUID').transform((str) => str as UUID),
+		'Invalid array of UUIDs'
+	),
 });
 
 type UpdateRoleReqParams = z.infer<typeof updateRoleParamSchema>;
