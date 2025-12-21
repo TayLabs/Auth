@@ -1,6 +1,6 @@
 import z from 'zod';
 import type { ResponseBody } from '@/types/ResponseBody';
-import type { Service } from '@/apiKey/interfaces/Service.interface';
+import type { Service } from '@/admin/interfaces/Service.interface';
 import type { UUID } from 'node:crypto';
 
 const updateParamsSchema = z.object({

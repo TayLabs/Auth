@@ -1,6 +1,6 @@
 import z from 'zod';
 import type { ResponseBody } from '@/types/ResponseBody';
-import type { Service } from '@/apiKey/interfaces/Service.interface';
+import type { Service } from '@/admin/interfaces/Service.interface';
 
 const registerBodySchema = z.object({
 	service: z
