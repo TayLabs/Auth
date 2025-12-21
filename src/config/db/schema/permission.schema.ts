@@ -1,7 +1,8 @@
-import { pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
-import { type UUID } from 'node:crypto';
+import { unique, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid } from 'drizzle-orm/pg-core';
+import { UUID } from 'node:crypto';
 import { serviceTable } from './service.schema';
-import { unique } from 'drizzle-orm/pg-core';
+import { text } from 'drizzle-orm/pg-core';
 
 export const permissionTable = pgTable(
 	'permissions',
@@ -18,9 +19,6 @@ export const permissionTable = pgTable(
 		description: text('description'),
 	},
 	(table) => [
-		unique('service_resource_action_unique_constraint').on(
-			table.serviceId,
-			table.key
-		),
+		unique('service_key_unique_constraint').on(table.serviceId, table.key),
 	]
 );
