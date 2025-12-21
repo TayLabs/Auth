@@ -57,6 +57,13 @@
       "when": 1766326254251,
       "tag": "0007_sparkling_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1766360134338,
+      "tag": "0008_complete_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

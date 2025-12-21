@@ -1,10 +1,6 @@
 import { controller } from '@/middleware/controller.middleware';
 import HttpStatus from '@/types/HttpStatus.enum';
-import type {
-	AddRoleReqBody,
-	AddRoleReqParams,
-	AddRoleResBody,
-} from '../dto/roles/add.dto';
+import type { AddRoleReqBody, AddRoleResBody } from '../dto/roles/add.dto';
 import type {
 	DeleteRoleReqParams,
 	DeleteRoleResBody,
@@ -15,15 +11,12 @@ import type {
 	UpdateRoleResBody,
 } from '../dto/roles/update.dto';
 import type { GetRoleReqParams, GetRoleResBody } from '../dto/roles/get.dto';
-import type {
-	GetAllRolesResBody,
-	GetAllRolesReqParams,
-} from '../dto/roles/getAll.dto';
+import type { GetAllRolesResBody } from '../dto/roles/getAll.dto';
 import Role from '../services/Role.service';
 
-export const getAll = controller<{}, GetAllRolesResBody, GetAllRolesReqParams>(
+export const getAll = controller<{}, GetAllRolesResBody>(
 	async (req, res, _next) => {
-		const roles = await new Role(req.params.serviceId).getAll();
+		const roles = await new Role().getAll();
 
 		res.status(HttpStatus.CREATED).json({
 			success: true,
@@ -36,7 +29,7 @@ export const getAll = controller<{}, GetAllRolesResBody, GetAllRolesReqParams>(
 
 export const get = controller<{}, GetRoleResBody, GetRoleReqParams>(
 	async (req, res, _next) => {
-		const role = await new Role(req.params.serviceId, req.params.roleId).get();
+		const role = await new Role(req.params.roleId).get();
 
 		res.status(HttpStatus.CREATED).json({
 			success: true,
@@ -47,9 +40,9 @@ export const get = controller<{}, GetRoleResBody, GetRoleReqParams>(
 	}
 );
 
-export const add = controller<AddRoleReqBody, AddRoleResBody, AddRoleReqParams>(
+export const add = controller<AddRoleReqBody, AddRoleResBody>(
 	async (req, res, _next) => {
-		const role = await new Role(req.params.serviceId).create(req.body);
+		const role = await new Role().create(req.body);
 
 		res.status(HttpStatus.CREATED).json({
 			success: true,
@@ -65,7 +58,7 @@ export const update = controller<
 	UpdateRoleResBody,
 	UpdateRoleReqParams
 >(async (req, res, _next) => {
-	const role = await new Role(req.params.serviceId, req.params.roleId).update({
+	const role = await new Role(req.params.roleId).update({
 		...req.body,
 	});
 
@@ -82,7 +75,7 @@ export const deleteRole = controller<
 	DeleteRoleResBody,
 	DeleteRoleReqParams
 >(async (req, res, _next) => {
-	const role = await new Role(req.params.serviceId, req.params.roleId).delete();
+	const role = await new Role(req.params.roleId).delete();
 
 	res.status(HttpStatus.CREATED).json({
 		success: true,

@@ -11,6 +11,18 @@ permissions:
     scopes:
       - 'user'
 
+  - key: 'user.read.all'
+    description: 'Read user data'
+    scopes:
+      - 'user'
+      - 'api-key'
+
+  - key: 'user.write.all'
+    description: 'Write user data'
+    scopes:
+      - 'user'
+      - 'api-key'
+
   - key: 'service.read'
     description: 'Read all services'
     scopes:

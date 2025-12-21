@@ -32,10 +32,11 @@ const prod = {
 		{
 			id: '23e28142-85b2-412a-8e20-eeed89bbfa04',
 			name: 'admin',
-			service: 'auth',
 			permissions: [
 				'auth:user.read',
 				'auth:user.write',
+				'auth:user.read.all',
+				'auth:user.write.all',
 				'auth:service.read',
 				'auth:service.write',
 				'auth:role.read',
@@ -50,13 +51,11 @@ const prod = {
 		},
 		{
 			id: 'e5075ee5-2083-4018-bd78-6e266662067d',
-			service: 'auth',
 			name: 'user',
 			permissions: ['auth:user.read', 'auth:user.write'],
 			assignToNewUser: true,
 		},
-	] satisfies (Omit<typeof roleTable.$inferInsert, 'serviceId'> & {
-		service: string;
+	] satisfies (typeof roleTable.$inferInsert & {
 		permissions: string[];
 	})[],
 };

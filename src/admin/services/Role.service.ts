@@ -10,11 +10,9 @@ import { permissionTable } from '@/config/db/schema/permission.schema';
 import { DatabaseError } from 'pg';
 
 export default class Role {
-	private _serviceId: UUID;
 	private _roleId?: UUID;
 
-	constructor(serviceId: UUID, roleId?: UUID) {
-		this._serviceId = serviceId;
+	constructor(roleId?: UUID) {
 		this._roleId = roleId;
 	}
 
@@ -87,7 +85,7 @@ export default class Role {
 				result = (
 					await tx
 						.insert(roleTable)
-						.values({ name, assignToNewUser, serviceId: this._serviceId })
+						.values({ name, assignToNewUser })
 						.returning()
 				)[0] as any;
 
@@ -118,9 +116,7 @@ export default class Role {
 			) {
 				switch (err.cause.code) {
 					case '23505': // unique_violation
-						throw new Error(
-							'A role with that name already exist for this service'
-						);
+						throw new Error('A role with that name already exist');
 					case '42P01': // undefined_table
 						throw new AppError(
 							'Database table not found',
@@ -150,7 +146,7 @@ export default class Role {
 				result = (
 					await tx
 						.update(roleTable)
-						.set({ name, assignToNewUser, serviceId: this._serviceId })
+						.set({ name, assignToNewUser })
 						.where(eq(roleTable.id, this._roleId!))
 						.returning()
 				)[0] as any;

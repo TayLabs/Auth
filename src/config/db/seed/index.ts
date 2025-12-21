@@ -63,23 +63,7 @@ export default async function seed(options?: { includeTestData: boolean }) {
 			await tx.insert(profileTable).values(prod.profiles).onConflictDoNothing();
 
 			// insert service, roles, and permissions
-			const services = await tx
-				.select()
-				.from(serviceTable)
-				.where(
-					or(...prod.roles.map((role) => eq(serviceTable.name, role.service)))
-				);
-			await tx
-				.insert(roleTable)
-				.values([
-					...prod.roles.map((role) => ({
-						...role,
-						serviceId: services.find(
-							(service) => service.name === role.service
-						)!.id,
-					})),
-				])
-				.onConflictDoNothing();
+			await tx.insert(roleTable).values(prod.roles).onConflictDoNothing();
 
 			for (const role of prod.roles) {
 				const permissions = await tx

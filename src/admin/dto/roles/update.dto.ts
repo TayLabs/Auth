@@ -4,7 +4,6 @@ import type { Role } from '@/admin/interfaces/Role.interface';
 import type { UUID } from 'node:crypto';
 
 const updateRoleParamSchema = z.object({
-	serviceId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 	roleId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 });
 

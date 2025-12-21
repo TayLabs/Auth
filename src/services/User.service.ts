@@ -1,6 +1,6 @@
 import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
-import { eq, DrizzleQueryError, getTableColumns } from 'drizzle-orm';
+import { eq, DrizzleQueryError, getTableColumns, or } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import Password from '@/auth/utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
@@ -8,186 +8,259 @@ import type { User as UserType } from '@/interfaces/user.interface';
 import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
 import type { UUID } from 'node:crypto';
+import { userRoleTable } from '@/config/db/schema/userRole.schema';
+import { roleTable } from '@/config/db/schema/role.schema';
+import { permissionTable } from '@/config/db/schema/permission.schema';
+import { rolePermissionTable } from '@/config/db/schema/rolePermission.schema';
 
 const { passwordHash: _passwordHash, ...userColumns } =
-  getTableColumns(userTable);
+	getTableColumns(userTable);
 const { userId: _userId, ...profileColumns } = getTableColumns(profileTable);
 
 export default class User {
-  private _userId: UUID;
+	private _userId: UUID;
 
-  constructor(userId: UUID) {
-    this._userId = userId;
-  }
+	constructor(userId: UUID) {
+		this._userId = userId;
+	}
 
-  public static async login(email: string, password: string) {
-    const user = (
-      await db
-        .select({ ...getTableColumns(userTable), profile: profileColumns })
-        .from(userTable)
-        .innerJoin(profileTable, eq(profileTable.userId, userTable.id))
-        .where(eq(userTable.email, email))
-    )[0];
+	public static async getAll(): Promise<UserType[]> {
+		const users = await db
+			.select({
+				...userColumns,
+				profile: profileColumns,
+			})
+			.from(userTable)
+			.innerJoin(profileTable, eq(profileTable.userId, userTable.id));
 
-    if (!user) {
-      throw new AppError(
-        'User does not exist, try signing up.',
-        HttpStatus.NOT_FOUND
-      );
-    }
+		return users;
+	}
 
-    if (!(await Password.verifyAsync(user.passwordHash, password))) {
-      throw new AppError('Invalid Password', 401);
-    }
+	public static async login(email: string, password: string) {
+		const user = (
+			await db
+				.select({ ...getTableColumns(userTable), profile: profileColumns })
+				.from(userTable)
+				.innerJoin(profileTable, eq(profileTable.userId, userTable.id))
+				.where(eq(userTable.email, email))
+		)[0];
 
-    // Remove password hash from user object before returning
-    const result: UserType = user;
-    delete result.passwordHash;
+		if (!user) {
+			throw new AppError(
+				'User does not exist, try signing up.',
+				HttpStatus.NOT_FOUND
+			);
+		}
 
-    return result as UserType;
-  }
+		if (!(await Password.verifyAsync(user.passwordHash, password))) {
+			throw new AppError('Invalid Password', 401);
+		}
 
-  public static async create(
-    email: string,
-    password: string,
-    { firstName, lastName }: { firstName: string; lastName: string }
-  ) {
-    const passwordHash = await Password.hashAsync(password);
+		// Remove password hash from user object before returning
+		const result: UserType = user;
+		delete result.passwordHash;
 
-    return await db.transaction(async (tx) => {
-      try {
-        const user = await db
-          .insert(userTable)
-          .values({
-            email,
-            passwordHash,
-          })
-          .returning(userColumns);
-        if (!user[0]) throw new Error('User creation failed');
+		return result as UserType;
+	}
 
-        const profile = await tx
-          .insert(profileTable)
-          .values({
-            userId: user[0].id,
-            firstName,
-            lastName,
-            username: email.split('@')[0],
-          })
-          .returning(profileColumns);
+	public static async create(
+		email: string,
+		password: string,
+		{ firstName, lastName }: { firstName: string; lastName: string }
+	) {
+		const passwordHash = await Password.hashAsync(password);
 
-        return { ...user[0], profile: profile[0] };
-      } catch (err) {
-        if (
-          err instanceof DrizzleQueryError &&
-          err.cause instanceof DatabaseError
-        ) {
-          switch (err.cause.code) {
-            case '23505': // unique_violation
-              throw new Error('Email already in use');
-            case '42P01': // undefined_table
-              throw new Error('Database table not found');
-            default:
-              throw err;
-          }
-        } else {
-          throw err;
-        }
-      }
-    });
-  }
+		return await db.transaction(async (tx) => {
+			try {
+				const user = await db
+					.insert(userTable)
+					.values({
+						email,
+						passwordHash,
+					})
+					.returning(userColumns);
+				if (!user[0]) throw new Error('User creation failed');
 
-  public async update(
-    data: Partial<
-      Omit<
-        typeof userTable.$inferInsert,
-        'id' | 'email' | 'passwordHash' | 'createdAt'
-      >
-    >
-  ) {
-    try {
-      await db
-        .update(userTable)
-        .set({
-          ...data,
-          // prevent fields from being modified
-          id: undefined,
-          email: undefined,
-          passwordHash: undefined,
-          createdAt: undefined,
-        })
-        .where(eq(userTable.id, this._userId));
-    } catch (err) {
-      if (
-        err instanceof DrizzleQueryError &&
-        err.cause instanceof DatabaseError
-      ) {
-        switch (err.cause.code) {
-          // case '23505': // unique_violation
-          // 	throw new Error('Unique violation');
-          case '42P01': // undefined_table
-            throw new Error('Database table not found');
-          default:
-            throw err;
-        }
-      } else {
-        throw err;
-      }
-    }
-  }
+				const profile = await tx
+					.insert(profileTable)
+					.values({
+						userId: user[0].id,
+						firstName,
+						lastName,
+						username: email.split('@')[0],
+					})
+					.returning(profileColumns);
 
-  public async resetPassword(password: string) {
-    const passwordHash = await Password.hashAsync(password);
+				return { ...user[0], profile: profile[0] };
+			} catch (err) {
+				if (
+					err instanceof DrizzleQueryError &&
+					err.cause instanceof DatabaseError
+				) {
+					switch (err.cause.code) {
+						case '23505': // unique_violation
+							throw new Error('Email already in use');
+						case '42P01': // undefined_table
+							throw new Error('Database table not found');
+						default:
+							throw err;
+					}
+				} else {
+					throw err;
+				}
+			}
+		});
+	}
 
-    await db
-      .update(userTable)
-      .set({
-        passwordHash,
-        forcePasswordChange: false,
-      })
-      .where(eq(userTable.id, this._userId));
-  }
+	public async update(
+		data: Partial<
+			Omit<
+				typeof userTable.$inferInsert,
+				'id' | 'email' | 'passwordHash' | 'createdAt'
+			>
+		>
+	) {
+		try {
+			await db
+				.update(userTable)
+				.set({
+					...data,
+					// prevent fields from being modified
+					id: undefined,
+					email: undefined,
+					passwordHash: undefined,
+					createdAt: undefined,
+				})
+				.where(eq(userTable.id, this._userId));
+		} catch (err) {
+			if (
+				err instanceof DrizzleQueryError &&
+				err.cause instanceof DatabaseError
+			) {
+				switch (err.cause.code) {
+					// case '23505': // unique_violation
+					// 	throw new Error('Unique violation');
+					case '42P01': // undefined_table
+						throw new Error('Database table not found');
+					default:
+						throw err;
+				}
+			} else {
+				throw err;
+			}
+		}
+	}
 
-  public async changePassword(currentPassword: string, newPassword: string) {
-    const newPasswordHash = await Password.hashAsync(newPassword);
+	public async resetPassword(password: string) {
+		const passwordHash = await Password.hashAsync(password);
 
-    const user = (
-      await db
-        .select({ id: userTable.id, passwordHash: userTable.passwordHash })
-        .from(userTable)
-        .where(eq(userTable.id, this._userId))
-    )[0];
+		await db
+			.update(userTable)
+			.set({
+				passwordHash,
+				forcePasswordChange: false,
+			})
+			.where(eq(userTable.id, this._userId));
+	}
 
-    if (!(await Password.verifyAsync(user.passwordHash, currentPassword))) {
-      throw new AppError('Current password is invalid', HttpStatus.BAD_REQUEST);
-    }
+	public async changePassword(currentPassword: string, newPassword: string) {
+		const newPasswordHash = await Password.hashAsync(newPassword);
 
-    const result = (
-      await db
-        .update(userTable)
-        .set({
-          passwordHash: newPasswordHash,
-          forcePasswordChange: false,
-        })
-        .where(eq(userTable.id, this._userId))
-        .returning({ id: userTable.id })
-    )[0];
+		const user = (
+			await db
+				.select({ id: userTable.id, passwordHash: userTable.passwordHash })
+				.from(userTable)
+				.where(eq(userTable.id, this._userId))
+		)[0];
 
-    if (!result) {
-      throw new AppError(
-        'Current password does not match',
-        HttpStatus.BAD_REQUEST
-      );
-    }
-  }
+		if (!(await Password.verifyAsync(user.passwordHash, currentPassword))) {
+			throw new AppError('Current password is invalid', HttpStatus.BAD_REQUEST);
+		}
 
-  public async delete() {
-    const result = (
-      await db
-        .delete(userTable)
-        .where(eq(userTable.id, this._userId))
-        .returning({ id: userTable.id })
-    )[0];
+		const result = (
+			await db
+				.update(userTable)
+				.set({
+					passwordHash: newPasswordHash,
+					forcePasswordChange: false,
+				})
+				.where(eq(userTable.id, this._userId))
+				.returning({ id: userTable.id })
+		)[0];
 
-    return result;
-  }
+		if (!result) {
+			throw new AppError(
+				'Current password does not match',
+				HttpStatus.BAD_REQUEST
+			);
+		}
+	}
+
+	public async forcePasswordReset(force: boolean) {
+		await db.update(userTable).set({ forcePasswordChange: force });
+	}
+
+	public async delete() {
+		const result = (
+			await db
+				.delete(userTable)
+				.where(eq(userTable.id, this._userId))
+				.returning({ id: userTable.id })
+		)[0];
+
+		return result;
+	}
+
+	public async updateRoles({ roles }: { roles: UUID[] }) {
+		await db.transaction(async (tx) => {
+			const current = await tx
+				.select({
+					roleId: userRoleTable.roleId,
+				})
+				.from(userRoleTable)
+				.where(eq(userRoleTable.userId, this._userId));
+
+			const toAdd = roles.filter((roleId) => !current.includes({ roleId }));
+			const toRemove = current.filter(({ roleId }) => roles.includes(roleId));
+
+			await tx.insert(userRoleTable).values(
+				toAdd.map((roleId) => ({
+					roleId: roleId,
+					userId: this._userId,
+				}))
+			);
+
+			await tx
+				.delete(userRoleTable)
+				.where(
+					or(...toRemove.map(({ roleId }) => eq(userRoleTable.roleId, roleId)))
+				);
+		});
+
+		const results = await db
+			.select(getTableColumns(roleTable))
+			.from(roleTable)
+			.innerJoin(userRoleTable, eq(userRoleTable.roleId, roleTable.id))
+			.where(eq(userRoleTable.userId, this._userId));
+		const permissions = await db
+			.select({
+				...getTableColumns(permissionTable),
+				roleId: rolePermissionTable.roleId,
+			})
+			.from(permissionTable)
+			.innerJoin(
+				rolePermissionTable,
+				eq(rolePermissionTable.permissionId, permissionTable.id)
+			)
+			.where(
+				or(...results.map((role) => eq(rolePermissionTable.roleId, role.id)))
+			);
+
+		return results.map((role) => ({
+			...role,
+			permissions: permissions
+				.filter((permission) => permission.roleId === role.id)
+				.map(({ roleId, ...permission }) => permission),
+		}));
+	}
 }

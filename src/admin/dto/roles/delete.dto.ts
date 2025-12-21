@@ -3,7 +3,6 @@ import type { ResponseBody } from '@/types/ResponseBody';
 import type { UUID } from 'node:crypto';
 
 const deleteRoleParamSchema = z.object({
-	serviceId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 	roleId: z.uuid('Must be a valid UUID').transform((str) => str as UUID),
 });
 
