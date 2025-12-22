@@ -118,15 +118,17 @@ export default async function seed(options?: { includeTestData: boolean }) {
 					await tx.insert(rolePermissionTable).values(toAdd);
 				}
 
-				await tx
-					.delete(rolePermissionTable)
-					.where(
-						or(
-							...toRemove.map((permission) =>
-								eq(rolePermissionTable.permissionId, permission.id)
+				if (toRemove.length > 0) {
+					await tx
+						.delete(rolePermissionTable)
+						.where(
+							or(
+								...toRemove.map((permission) =>
+									eq(rolePermissionTable.permissionId, permission.id)
+								)
 							)
-						)
-					);
+						);
+				}
 			}
 			for (const user of prod.users) {
 				const filtered = prod.roles.filter((role) =>
