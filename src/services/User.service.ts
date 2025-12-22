@@ -228,6 +228,8 @@ export default class User {
 				)
 			);
 
+		console.log(sessions);
+
 		for (const session of sessions) {
 			const sessionKey = `session:${session.id}`;
 

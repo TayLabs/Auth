@@ -42,9 +42,9 @@ app.use(globalRateLimit);
 app.use(useragent());
 
 // Register routes (anything exported from /*/routes/*.router.ts)
-app.use('/api/v1', authRoutes);
-app.use('/api/v1', accountRoutes);
-app.use('/api/v1', adminRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/account', accountRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Handle 404 - Not Found
 app.use(notFoundHandler);

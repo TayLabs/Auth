@@ -5,8 +5,8 @@ import { userRouter } from './user.routes';
 
 const adminRoutes = express.Router({ mergeParams: true });
 
-adminRoutes.use('/admin/users', userRouter);
-adminRoutes.use('/admin/services', serviceRouter);
-adminRoutes.use('/admin/roles', roleRouter);
+adminRoutes.use('/users', userRouter);
+adminRoutes.use('/services', serviceRouter);
+adminRoutes.use('/roles', roleRouter);
 
 export { adminRoutes };

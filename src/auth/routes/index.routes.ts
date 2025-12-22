@@ -8,11 +8,11 @@ import { csrfRouter } from './csrf.routes';
 
 const authRoutes = express.Router({ mergeParams: true });
 
-authRoutes.use('/auth', loginRouter);
-authRoutes.use('/auth/csrf', csrfRouter);
-authRoutes.use('/auth/totp', totpRouter);
-authRoutes.use('/auth/password', resetPasswordRouter);
-authRoutes.use('/auth/email', verifyEmailRouter);
-authRoutes.use('/auth/logout', logoutRouter);
+authRoutes.use('/', loginRouter);
+authRoutes.use('/csrf', csrfRouter);
+authRoutes.use('/totp', totpRouter);
+authRoutes.use('/password', resetPasswordRouter);
+authRoutes.use('/email', verifyEmailRouter);
+authRoutes.use('/logout', logoutRouter);
 
 export { authRoutes };
