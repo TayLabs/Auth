@@ -1,6 +1,6 @@
 import { db } from '@/config/db';
 import { userTable } from '@/config/db/schema/user.schema';
-import { eq, DrizzleQueryError, getTableColumns, or } from 'drizzle-orm';
+import { eq, DrizzleQueryError, getTableColumns, or, and } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import Password from '@/auth/utils/Password.util';
 import { profileTable } from '@/config/db/schema/profile.schema';
@@ -12,6 +12,9 @@ import { userRoleTable } from '@/config/db/schema/userRole.schema';
 import { roleTable } from '@/config/db/schema/role.schema';
 import { permissionTable } from '@/config/db/schema/permission.schema';
 import { rolePermissionTable } from '@/config/db/schema/rolePermission.schema';
+import { deviceTable } from '@/config/db/schema/device.schema';
+import redisClient from '@/config/redis/client';
+import { SessionBody } from '@/auth/services/Token.service';
 
 const { passwordHash: _passwordHash, ...userColumns } =
 	getTableColumns(userTable);
@@ -177,6 +180,13 @@ export default class User {
 			throw new AppError('Current password is invalid', HttpStatus.BAD_REQUEST);
 		}
 
+		if (currentPassword === newPassword) {
+			throw new AppError(
+				'New password must be different then the current one',
+				HttpStatus.BAD_REQUEST
+			);
+		}
+
 		const result = (
 			await db
 				.update(userTable)
@@ -197,7 +207,36 @@ export default class User {
 	}
 
 	public async forcePasswordReset(force: boolean) {
-		await db.update(userTable).set({ forcePasswordChange: force });
+		const user = (
+			await db
+				.update(userTable)
+				.set({ forcePasswordChange: force })
+				.where(eq(userTable.id, this._userId))
+				.returning()
+		)[0];
+
+		// Modify device sessions to have pendingPasswordReset
+		const sessions = await db
+			.select({
+				id: deviceTable.sessionId,
+			})
+			.from(deviceTable)
+			.where(
+				and(
+					eq(deviceTable.userId, this._userId),
+					eq(deviceTable.status, 'active')
+				)
+			);
+
+		for (const session of sessions) {
+			const sessionKey = `session:${session.id}`;
+
+			await redisClient.hset(sessionKey, {
+				pendingPasswordReset: user.forcePasswordChange,
+			});
+
+			console.log(await redisClient.hgetall(sessionKey));
+		}
 	}
 
 	public async delete() {
@@ -221,20 +260,29 @@ export default class User {
 				.where(eq(userRoleTable.userId, this._userId));
 
 			const toAdd = roles.filter((roleId) => !current.includes({ roleId }));
-			const toRemove = current.filter(({ roleId }) => roles.includes(roleId));
+			const toRemove = current.filter(({ roleId }) => !roles.includes(roleId));
 
-			await tx.insert(userRoleTable).values(
-				toAdd.map((roleId) => ({
-					roleId: roleId,
-					userId: this._userId,
-				}))
-			);
+			if (toAdd.length > 0) {
+				await tx
+					.insert(userRoleTable)
+					.values(
+						toAdd.map((roleId) => ({
+							roleId: roleId,
+							userId: this._userId,
+						}))
+					)
+					.onConflictDoNothing();
+			}
 
-			await tx
-				.delete(userRoleTable)
-				.where(
-					or(...toRemove.map(({ roleId }) => eq(userRoleTable.roleId, roleId)))
-				);
+			if (toRemove.length > 0) {
+				await tx
+					.delete(userRoleTable)
+					.where(
+						or(
+							...toRemove.map(({ roleId }) => eq(userRoleTable.roleId, roleId))
+						)
+					);
+			}
 		});
 
 		const results = await db
