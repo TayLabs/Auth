@@ -107,8 +107,11 @@ export default async function seed(options?: { includeTestData: boolean }) {
 						)!.id,
 						roleId: role.id,
 					}));
-				const toRemove = current.filter((permission) =>
-					role.permissions.includes(`${permission.service}:${permission.key}`)
+				const toRemove = current.filter(
+					(permission) =>
+						!role.permissions.includes(
+							`${permission.service}:${permission.key}`
+						)
 				);
 
 				if (toAdd.length > 0) {
