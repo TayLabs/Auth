@@ -45,11 +45,19 @@ export default async function seed(options?: { includeTestData: boolean }) {
 						.onConflictDoNothing();
 				}
 			}
-		});
+			const permissions = await db
+				.select({
+					...getTableColumns(permissionTable),
+					service: getTableColumns(serviceTable),
+				})
+				.from(permissionTable)
+				.innerJoin(
+					serviceTable,
+					eq(serviceTable.id, permissionTable.serviceId)
+				);
 
-		await db.transaction(async (tx) => {
 			// insert user/profiles
-			const users = await tx
+			await tx
 				.insert(userTable)
 				.values(
 					await Promise.all(
@@ -66,35 +74,56 @@ export default async function seed(options?: { includeTestData: boolean }) {
 			await tx.insert(roleTable).values(prod.roles).onConflictDoNothing();
 
 			for (const role of prod.roles) {
-				const permissions = await tx
-					.select(getTableColumns(permissionTable))
+				const current = await tx
+					.select({
+						...getTableColumns(permissionTable),
+						service: serviceTable.name,
+					})
 					.from(permissionTable)
 					.innerJoin(
 						serviceTable,
 						eq(serviceTable.id, permissionTable.serviceId)
 					)
+					.innerJoin(
+						rolePermissionTable,
+						eq(rolePermissionTable.permissionId, permissionTable.id)
+					)
+					.where(eq(rolePermissionTable.roleId, role.id));
+
+				const toAdd = role.permissions
+					.filter(
+						(permissionKey) =>
+							!current.find(
+								(permission) =>
+									permission.service === permissionKey.split(':')[0] &&
+									permission.key === permissionKey.split(':')[1]
+							)
+					)
+					.map((key) => ({
+						permissionId: permissions.find(
+							(permission) =>
+								permission.service.name === key.split(':')[0] &&
+								permission.key === key.split(':')[1]
+						)!.id,
+						roleId: role.id,
+					}));
+				const toRemove = current.filter((permission) =>
+					role.permissions.includes(`${permission.service}:${permission.key}`)
+				);
+
+				if (toAdd.length > 0) {
+					await tx.insert(rolePermissionTable).values(toAdd);
+				}
+
+				await tx
+					.delete(rolePermissionTable)
 					.where(
 						or(
-							...role.permissions.map((permission) =>
-								and(
-									eq(serviceTable.name, permission.split(':')[0]),
-									eq(permissionTable.key, permission.split(':')[1])
-								)
+							...toRemove.map((permission) =>
+								eq(rolePermissionTable.permissionId, permission.id)
 							)
 						)
 					);
-
-				if (permissions.length > 0) {
-					await tx
-						.insert(rolePermissionTable)
-						.values(
-							permissions.map((permission) => ({
-								permissionId: permission.id,
-								roleId: role.id,
-							}))
-						)
-						.onConflictDoNothing();
-				}
 			}
 			for (const user of prod.users) {
 				const filtered = prod.roles.filter((role) =>
