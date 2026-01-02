@@ -1,5 +1,6 @@
 import redisClient from '@/config/redis/client';
 import env from '@/types/env';
+import type { RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import RedisStore, { type RedisReply } from 'rate-limit-redis';
 
@@ -18,4 +19,4 @@ export const verifyEmailLimiter =
           prefix: 'rl:verify-email:',
         }),
       })
-    : undefined;
+    : (((_req, _res, next) => next()) as RequestHandler);

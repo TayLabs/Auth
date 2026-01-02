@@ -1,5 +1,6 @@
 import redisClient from '@/config/redis/client';
 import env from '@/types/env';
+import type { RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import RedisStore, { type RedisReply } from 'rate-limit-redis';
 
@@ -18,7 +19,7 @@ export const loginRateLimit =
           prefix: 'rl:login:',
         }),
       })
-    : undefined;
+    : (((_req, _res, next) => next()) as RequestHandler);
 
 export const signUpRateLimit =
   env.NODE_ENV === 'production'
@@ -35,7 +36,7 @@ export const signUpRateLimit =
           prefix: 'rl:signup:',
         }),
       })
-    : undefined;
+    : (((_req, _res, next) => next()) as RequestHandler);
 
 export const refreshRateLimit =
   env.NODE_ENV === 'production'
@@ -52,4 +53,4 @@ export const refreshRateLimit =
           prefix: 'rl:refresh:',
         }),
       })
-    : undefined;
+    : (((_req, _res, next) => next()) as RequestHandler);

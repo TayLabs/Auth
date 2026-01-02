@@ -1,5 +1,6 @@
 import redisClient from '@/config/redis/client';
 import env from '@/types/env';
+import type { RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import RedisStore, { type RedisReply } from 'rate-limit-redis';
 
@@ -17,4 +18,4 @@ export const globalRateLimit =
           prefix: 'rl:default:', // custom prefix for ip logging
         }),
       })
-    : undefined;
+    : (((_req, _res, next) => next()) as RequestHandler);
