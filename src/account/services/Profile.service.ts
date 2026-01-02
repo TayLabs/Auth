@@ -14,11 +14,12 @@ export default class Profile {
 
   public async get(): Promise<Omit<User, 'passwordHash'>> {
     const { passwordHash, ...userColumns } = getTableColumns(userTable);
+    const { userId, ...profileColumns } = getTableColumns(profileTable);
 
     const result = await db
       .select({
         ...userColumns,
-        profile: getTableColumns(profileTable),
+        profile: profileColumns,
       })
       .from(userTable)
       .innerJoin(profileTable, eq(userTable.id, profileTable.userId))
