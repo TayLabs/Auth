@@ -1,4 +1,4 @@
-import { accessTokenCookie } from '@/auth/constants/cookies';
+// import { accessTokenCookie } from '@/auth/constants/cookies';
 import Token, { type PendingActionType } from '@/auth/services/Token.service';
 import AppError from '@/types/AppError';
 import env from '@/types/env';
@@ -12,8 +12,8 @@ const authenticate: (options?: {
   try {
     // Parse Access Token
     const accessToken: string | undefined =
-      req.headers.authorization?.split(' ')[1] ||
-      req.cookies[accessTokenCookie.name];
+      req.headers.authorization?.split(' ')[1];
+    // || req.cookies[accessTokenCookie.name];
 
     if (!accessToken) {
       throw new AppError(

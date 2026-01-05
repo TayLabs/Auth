@@ -1,8 +1,8 @@
 import type { ResponseBody } from '@/types/ResponseBody';
-import type { Service } from '@/admin/interfaces/Service.interface';
+import type { Service } from '@/admin/interfaces/service.interface';
 
 type GetAllResBody = ResponseBody<{
-	services: Service[];
+  services: Service[];
 }>;
 
 export { type GetAllResBody };

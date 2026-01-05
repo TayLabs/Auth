@@ -39,12 +39,12 @@ export const sessionCookie: (sessionId: string) => Cookie = (sessionId) => ({
   },
 });
 
-export const accessTokenCookie: Cookie = {
-  name: '_access_t',
-  options: {
-    domain: `.${env.HOST_DOMAIN}`,
-    sameSite: 'lax',
-    expires: new Date(Date.now() + parseTTL(env.ACCESS_TOKEN_TTL).milliseconds),
-    httpOnly: false,
-  },
-};
+// export const accessTokenCookie: Cookie = {
+//   name: '_access_t',
+//   options: {
+//     domain: `.${env.HOST_DOMAIN}`,
+//     sameSite: 'lax',
+//     expires: new Date(Date.now() + parseTTL(env.ACCESS_TOKEN_TTL).milliseconds),
+//     httpOnly: false,
+//   },
+// };

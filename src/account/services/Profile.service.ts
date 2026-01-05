@@ -4,6 +4,7 @@ import { userTable } from '@/config/db/schema/user.schema';
 import type { User } from '@/interfaces/user.interface';
 import { eq, getTableColumns } from 'drizzle-orm';
 import type { UUID } from 'node:crypto';
+import { Profile as ProfileType } from '@/interfaces/profile.interface';
 
 export default class Profile {
   private _userId: UUID;
@@ -30,7 +31,7 @@ export default class Profile {
 
   public async update(
     data: Partial<Omit<typeof profileTable.$inferInsert, 'id' | 'userId'>>
-  ) {
+  ): Promise<ProfileType> {
     const result = (
       await db
         .update(profileTable)

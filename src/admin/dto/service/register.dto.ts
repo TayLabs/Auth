@@ -1,26 +1,26 @@
 import z from 'zod';
 import type { ResponseBody } from '@/types/ResponseBody';
-import type { Service } from '@/admin/interfaces/Service.interface';
+import type { Service } from '@/admin/interfaces/service.interface';
 
 const registerBodySchema = z.object({
-	service: z
-		.string('Must be a valid string')
-		.min(2, 'Service name is too short')
-		.max(128, 'Service name is too long'),
-	permissions: z.array(
-		z.object({
-			key: z
-				.string('Must be a valid string')
-				.min(2, 'Permission name is too short')
-				.max(128, 'Permission name is too long'),
-			description: z.string('Must be a valid string').optional(),
-		})
-	),
+  service: z
+    .string('Must be a valid string')
+    .min(2, 'Service name is too short')
+    .max(128, 'Service name is too long'),
+  permissions: z.array(
+    z.object({
+      key: z
+        .string('Must be a valid string')
+        .min(2, 'Permission name is too short')
+        .max(128, 'Permission name is too long'),
+      description: z.string('Must be a valid string').optional(),
+    })
+  ),
 });
 
 type RegisterReqBody = z.infer<typeof registerBodySchema>;
 type RegisterResBody = ResponseBody<{
-	service: Service;
+  service: Service;
 }>;
 
 export { registerBodySchema, type RegisterReqBody, type RegisterResBody };

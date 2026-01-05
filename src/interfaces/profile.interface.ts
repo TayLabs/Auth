@@ -5,7 +5,7 @@ export type Profile = {
   username: string;
   firstName: string;
   lastName: string;
-  displayName: string;
+  displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
   updatedAt: Date;

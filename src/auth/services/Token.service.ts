@@ -13,7 +13,7 @@ import { DrizzleQueryError, eq } from 'drizzle-orm';
 import { DeviceType, IPAddress } from '@/types/DeviceType';
 import { DatabaseError } from 'pg';
 import {
-  accessTokenCookie,
+  // accessTokenCookie,
   deviceCookie,
   selectedSessionCookie,
   sessionCookie,
@@ -224,11 +224,11 @@ export default class Token {
           expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
         }
       );
-      this._res.cookie(
-        accessTokenCookie.name,
-        accessToken,
-        accessTokenCookie.options
-      );
+      // this._res.cookie(
+      //   accessTokenCookie.name,
+      //   accessToken,
+      //   accessTokenCookie.options
+      // );
 
       return {
         pending,
@@ -404,11 +404,11 @@ export default class Token {
         expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
       }
     );
-    this._res.cookie(
-      accessTokenCookie.name,
-      newAccessToken,
-      accessTokenCookie.options
-    );
+    // this._res.cookie(
+    //   accessTokenCookie.name,
+    //   newAccessToken,
+    //   accessTokenCookie.options
+    // );
 
     return {
       pending,
@@ -487,7 +487,7 @@ export default class Token {
       await redisClient.del(record.sessionId);
     }
 
-    this._res.clearCookie(accessTokenCookie.name); // clear access token for requesting user for immediate effect
+    // this._res.clearCookie(accessTokenCookie.name); // clear access token for requesting user for immediate effect
 
     return { sessionIds: deviceRecords.map((r) => r.sessionId) };
   }
