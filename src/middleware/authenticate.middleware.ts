@@ -7,7 +7,7 @@ import { RequestHandler } from 'express';
 
 const authenticate: (options?: {
   allow?: string[];
-  acceptPending?: NonNullable<PendingActionType>;
+  acceptPending?: NonNullable<PendingActionType>[];
 }) => RequestHandler = (options) => (req, res, next) => {
   try {
     // Parse Access Token
@@ -25,16 +25,16 @@ const authenticate: (options?: {
     // Verify Access Token
     const payload = new Token(req, res).verify(accessToken);
 
-    if (payload.pending === '2fa' && options?.acceptPending !== '2fa') {
+    if (payload.pending === '2fa' && !options?.acceptPending?.includes('2fa')) {
       throw new AppError('Finish Two Factor', HttpStatus.UNAUTHORIZED);
     } else if (
       payload.pending === 'passwordReset' &&
-      options?.acceptPending !== 'passwordReset'
+      !options?.acceptPending?.includes('passwordReset')
     ) {
       throw new AppError('Reset Password', HttpStatus.UNAUTHORIZED);
     } else if (
       payload.pending === 'emailVerification' &&
-      options?.acceptPending !== 'emailVerification'
+      !options?.acceptPending?.includes('emailVerification')
     ) {
       throw new AppError('Verify Email', HttpStatus.UNAUTHORIZED);
     }

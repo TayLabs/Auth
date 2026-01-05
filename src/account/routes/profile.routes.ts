@@ -7,7 +7,14 @@ import updateBodySchema from '../dto/profile/update.dto';
 // /account/profile/*
 const profileRouter = Router({ mergeParams: true });
 
-profileRouter.get('/', authenticate({ allow: ['user.read'] }), get);
+profileRouter.get(
+  '/',
+  authenticate({
+    allow: ['user.read'],
+    acceptPending: ['passwordReset', '2fa', 'emailVerification'],
+  }),
+  get
+);
 profileRouter.patch(
   '/',
   authenticate({ allow: ['user.write'] }),

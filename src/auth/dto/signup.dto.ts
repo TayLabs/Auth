@@ -34,10 +34,10 @@ const signupBodySchema = z
         'Invalid link base URL'
       ),
   })
-  .refine(
-    (data) => data.password === data.passwordConfirm,
-    'Passwords do not match'
-  );
+  .refine((data) => data.password === data.passwordConfirm, {
+    error: 'Passwords do not match',
+    path: ['passwordConfirm'],
+  });
 
 type SignupReqBody = z.infer<typeof signupBodySchema>;
 type SignupResBody = ResponseBody<{
