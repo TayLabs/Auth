@@ -79,7 +79,6 @@ services:
     restart: unless-stopped
     environment:
       KEY_SERVICE_BASE_URL: http://${CONTAINER_PREFIX:-taylab-auth}-keys:7212
-      API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
     ports:
       - '4313:7414'
