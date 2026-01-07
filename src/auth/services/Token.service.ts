@@ -3,7 +3,6 @@ import { randomBytes, type UUID } from 'node:crypto';
 import HttpStatus from '@/types/HttpStatus.enum';
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import env from '@/types/env';
-import parseTTL from '../utils/parseTTL.utils';
 import type { Request, Response } from 'express';
 import { db } from '@/config/db';
 import { deviceTable } from '@/config/db/schema/device.schema';
@@ -22,6 +21,7 @@ import type { User } from '@/interfaces/user.interface';
 import { permissionTable } from '@/config/db/schema/permission.schema';
 import { rolePermissionTable } from '@/config/db/schema/rolePermission.schema';
 import { serviceTable, userRoleTable } from '@/config/db/schema/index.schema';
+import parseTTL from '../utils/parseTTL.utils';
 
 export type SessionBody = {
   rid: string;
@@ -156,7 +156,7 @@ export default class Token {
       );
       await redisClient.expire(
         sessionKey,
-        parseTTL(env.REFRESH_TOKEN_TTL).seconds
+        parseTTL(env.REFRESH_TOKEN_TTL).milliseconds
       );
 
       // Create Refresh JWT
@@ -169,7 +169,7 @@ export default class Token {
         } satisfies RefreshTokenPayload,
         env.REFRESH_TOKEN_SECRET,
         {
-          expiresIn: parseTTL(env.REFRESH_TOKEN_TTL).seconds,
+          expiresIn: env.REFRESH_TOKEN_TTL,
         }
       );
       this._res.cookie(
@@ -221,7 +221,7 @@ export default class Token {
         } satisfies AccessTokenPayload,
         env.ACCESS_TOKEN_SECRET,
         {
-          expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
+          expiresIn: env.ACCESS_TOKEN_TTL,
         }
       );
       // this._res.cookie(
@@ -342,7 +342,7 @@ export default class Token {
     );
     await redisClient.expire(
       sessionKey,
-      parseTTL(env.REFRESH_TOKEN_TTL).seconds
+      parseTTL(env.REFRESH_TOKEN_TTL).milliseconds
     );
 
     const newRefreshToken = jwt.sign(
@@ -354,7 +354,7 @@ export default class Token {
       } as RefreshTokenPayload,
       env.REFRESH_TOKEN_SECRET,
       {
-        expiresIn: parseTTL(env.REFRESH_TOKEN_TTL).seconds,
+        expiresIn: env.REFRESH_TOKEN_TTL,
       }
     );
     this._res.cookie(
@@ -401,7 +401,7 @@ export default class Token {
       } satisfies AccessTokenPayload,
       env.ACCESS_TOKEN_SECRET,
       {
-        expiresIn: parseTTL(env.ACCESS_TOKEN_TTL).seconds,
+        expiresIn: env.ACCESS_TOKEN_TTL,
       }
     );
     // this._res.cookie(

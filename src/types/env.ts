@@ -65,7 +65,8 @@ const envSchema = z.object({
       /^\d+(m|h)$/,
       'Must be a valid timespan in minutes or hours (suffix: m | h)'
     )
-    .default('15m'),
+    .default('15m')
+    .transform((str) => str as `${number}${'m' | 'h'}`),
   REFRESH_TOKEN_SECRET: z
     .string('Must be a valid string of characters')
     .min(12, 'Must be at least 12 characters long')
@@ -73,7 +74,8 @@ const envSchema = z.object({
   REFRESH_TOKEN_TTL: z
     .string()
     .regex(/^\d+(h|d)$/, 'Must be a valid length of days (suffix: d)')
-    .default('30d'),
+    .default('30d')
+    .transform((str) => str as `${number}${'h' | 'd'}`),
   CHECK_PASSWORD_COMPLEXITY: z
     .string()
     .regex(/^(true|false)$/, 'Must be true or false')
