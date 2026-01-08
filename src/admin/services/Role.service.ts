@@ -145,7 +145,7 @@ export default class Role {
       let result: RoleType;
       await db.transaction(async (tx) => {
         const selected = (
-          await db
+          await tx
             .select({ isExternal: roleTable.isExternal })
             .from(roleTable)
             .where(eq(roleTable.id, this._roleId!))
@@ -243,7 +243,7 @@ export default class Role {
     if (!this._roleId)
       throw new AppError('Please specify a role id', HttpStatus.BAD_REQUEST);
 
-    let result: typeof roleTable.$inferInsert;
+    let result: typeof roleTable.$inferSelect;
     await db.transaction(async (tx) => {
       const selected = (
         await db
@@ -264,7 +264,7 @@ export default class Role {
         );
 
       result = (
-        await db
+        await tx
           .delete(roleTable)
           .where(eq(roleTable.id, this._roleId!))
           .returning()

@@ -125,7 +125,25 @@ export default class Service {
     try {
       let serviceRecord: ServiceType & { permissions: Permission[] };
       await db.transaction(async (tx) => {
-        // insert service, roles, and permissions
+        const selected = (
+          await tx
+            .select({ isExternal: serviceTable.isExternal })
+            .from(serviceTable)
+            .where(eq(serviceTable.id, this._serviceId!))
+        )[0];
+
+        if (!selected)
+          throw new AppError(
+            'A service with this Id could not be found',
+            HttpStatus.NOT_FOUND
+          );
+        else if (!selected.isExternal)
+          throw new AppError(
+            'Cannot edit an internal service',
+            HttpStatus.BAD_REQUEST
+          );
+
+        // update service and permissions
         serviceRecord = (
           await tx
             .update(serviceTable)
@@ -223,27 +241,41 @@ export default class Service {
       throw new AppError('Please specify a service id', HttpStatus.BAD_REQUEST);
     }
 
-    const result = (
-      await db
-        .delete(serviceTable)
-        .where(
-          and(
-            eq(serviceTable.id, this._serviceId),
-            eq(serviceTable.isExternal, true)
+    let result: Pick<typeof serviceTable.$inferSelect, 'id'>;
+    await db.transaction(async (tx) => {
+      const selected = (
+        await db
+          .select({ isExternal: serviceTable.isExternal })
+          .from(serviceTable)
+          .where(eq(serviceTable.id, this._serviceId!))
+      )[0];
+
+      if (!selected)
+        throw new AppError(
+          'A service with this Id could not be found',
+          HttpStatus.NOT_FOUND
+        );
+      else if (!selected.isExternal)
+        throw new AppError(
+          'Cannot delete an internal service',
+          HttpStatus.BAD_REQUEST
+        );
+
+      result = (
+        await tx
+          .delete(serviceTable)
+          .where(
+            and(
+              eq(serviceTable.id, this._serviceId),
+              eq(serviceTable.isExternal, true)
+            )
           )
-        )
-        .returning({
-          id: serviceTable.id,
-        })
-    )[0];
+          .returning({
+            id: serviceTable.id,
+          })
+      )[0];
+    });
 
-    if (!result) {
-      throw new AppError(
-        'Invalid service id or the service is internally populated and cannot be deleted',
-        HttpStatus.BAD_REQUEST
-      );
-    }
-
-    return result;
+    return { id: result!.id! };
   }
 }
