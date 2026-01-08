@@ -63,6 +63,7 @@ services:
     environment:
       DATABASE_URL: postgres://tayLabKeys:onaroewth4p9g8ahsoef@${CONTAINER_PREFIX:-taylab-auth}-keys-postgres:5432/keys
       ACCESS_TOKEN_SECRET: aopvnwoaht
+      API_KEY_TTL: 120d
     depends_on:
       keys-postgres:
         condition: service_healthy
