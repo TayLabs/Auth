@@ -85,6 +85,7 @@ export default class Role {
         result = (
           await tx
             .insert(roleTable)
+            // isExternal is always true, this is purely to prevent modification of seeded roles as on restart they would be reset anyways
             .values({ name, assignToNewUser })
             .returning()
         )[0] as any;
@@ -143,6 +144,24 @@ export default class Role {
     try {
       let result: RoleType;
       await db.transaction(async (tx) => {
+        const selected = (
+          await db
+            .select({ isExternal: roleTable.isExternal })
+            .from(roleTable)
+            .where(eq(roleTable.id, this._roleId!))
+        )[0];
+
+        if (!selected)
+          throw new AppError(
+            'A role with this Id could not be found',
+            HttpStatus.NOT_FOUND
+          );
+        else if (!selected.isExternal)
+          throw new AppError(
+            'Cannot edit an internal role',
+            HttpStatus.BAD_REQUEST
+          );
+
         result = (
           await tx
             .update(roleTable)

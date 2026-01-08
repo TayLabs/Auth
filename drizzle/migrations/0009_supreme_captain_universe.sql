@@ -1,0 +1,1 @@
+ALTER TABLE "roles" ADD COLUMN "is_external" boolean DEFAULT true NOT NULL;

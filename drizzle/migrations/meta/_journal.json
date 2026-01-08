@@ -64,6 +64,13 @@
       "when": 1766360134338,
       "tag": "0008_complete_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1767895823151,
+      "tag": "0009_supreme_captain_universe",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import HttpStatus from '@/types/HttpStatus.enum';
 import { Service as ServiceType } from '../interfaces/service.interface';
 import { permissionTable, serviceTable } from '@/config/db/schema/index.schema';
 import { DatabaseError } from 'pg';
-import { Permission } from '../interfaces/Permission.interface';
+import { Permission } from '../interfaces/permission.interface';
 
 export default class Service {
   private _serviceId: UUID;
