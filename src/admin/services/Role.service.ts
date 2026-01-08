@@ -243,13 +243,34 @@ export default class Role {
     if (!this._roleId)
       throw new AppError('Please specify a role id', HttpStatus.BAD_REQUEST);
 
-    const result = (
-      await db
-        .delete(roleTable)
-        .where(eq(roleTable.id, this._roleId))
-        .returning()
-    )[0];
+    let result: typeof roleTable.$inferInsert;
+    await db.transaction(async (tx) => {
+      const selected = (
+        await db
+          .select({ isExternal: roleTable.isExternal })
+          .from(roleTable)
+          .where(eq(roleTable.id, this._roleId!))
+      )[0];
 
-    return { id: result.id };
+      if (!selected)
+        throw new AppError(
+          'A role with this Id could not be found',
+          HttpStatus.NOT_FOUND
+        );
+      else if (!selected.isExternal)
+        throw new AppError(
+          'Cannot delete an internal role',
+          HttpStatus.BAD_REQUEST
+        );
+
+      result = (
+        await db
+          .delete(roleTable)
+          .where(eq(roleTable.id, this._roleId!))
+          .returning()
+      )[0];
+    });
+
+    return { id: result!.id! };
   }
 }
