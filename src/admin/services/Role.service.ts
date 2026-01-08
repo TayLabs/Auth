@@ -223,8 +223,8 @@ export default class Role {
         err.cause instanceof DatabaseError
       ) {
         switch (err.cause.code) {
-          // case '23505': // unique_violation
-          // 	throw new Error('A role with that name already exist');
+          case '23505': // unique_violation
+            throw new Error('A role with that name already exist');
           case '42P01': // undefined_table
             throw new AppError(
               'Database table not found',
