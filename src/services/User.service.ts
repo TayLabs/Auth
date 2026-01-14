@@ -76,7 +76,7 @@ export default class User {
 
     return await db.transaction(async (tx) => {
       try {
-        const user = await db
+        const user = await tx
           .insert(userTable)
           .values({
             email,
@@ -94,6 +94,21 @@ export default class User {
             username: email.split('@')[0],
           })
           .returning(profileColumns);
+
+        const rolesToAssign = await tx
+          .select()
+          .from(roleTable)
+          .where(eq(roleTable.assignToNewUser, true));
+        if (rolesToAssign.length > 0) {
+          await tx
+            .insert(userRoleTable)
+            .values(
+              rolesToAssign.map((role) => ({
+                roleId: role.id,
+                userId: user[0].id,
+              }))
+            );
+        }
 
         return { ...user[0], profile: profile[0] };
       } catch (err) {
