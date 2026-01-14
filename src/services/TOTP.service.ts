@@ -29,8 +29,15 @@ export default class TOTP {
   }
 
   public async create() {
+    const user = (
+      await db
+        .select({ email: userTable.email })
+        .from(userTable)
+        .where(eq(userTable.id, this._req.user.id))
+    )[0];
+
     const secret = authenticator.generateSecret(20);
-    const otpAuthUri = authenticator.keyuri('email', 'TayLabAuth', secret);
+    const otpAuthUri = authenticator.keyuri(user.email, 'TayLabAuth', secret);
 
     const qrCode = await QRCode.toDataURL(otpAuthUri);
 
@@ -98,7 +105,9 @@ export default class TOTP {
       );
 
     let matchId: UUID | undefined = undefined;
-    for (const totpToken of totpTokens) {
+    for (let i = 0; i < totpTokens.length; i++) {
+      const totpToken = totpTokens[i];
+
       const secret = decrypt({
         content: totpToken.encryptedSecret,
         iv: totpToken.encryptionIv,
@@ -117,12 +126,12 @@ export default class TOTP {
       }
     }
 
-    if (!matchId) {
-      throw new AppError('Invalid code', HttpStatus.BAD_REQUEST);
-    } else {
+    if (matchId) {
       return {
         id: matchId,
       };
+    } else {
+      throw new AppError('Invalid code', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -144,6 +153,23 @@ export default class TOTP {
         HttpStatus.NOT_FOUND
       );
     }
+
+    // Auto toggle it for the user if it's the last option remaining
+    await db.transaction(async (tx) => {
+      const tokens = await tx
+        .select({ id: totpTokenTable.id })
+        .from(totpTokenTable)
+        .where(eq(totpTokenTable.userId, this._req.user.id));
+
+      if (tokens.length === 0) {
+        await tx
+          .update(userTable)
+          .set({
+            twoFactorEnabled: false,
+          })
+          .where(eq(userTable.id, this._req.user.id));
+      }
+    });
 
     return result;
   }
