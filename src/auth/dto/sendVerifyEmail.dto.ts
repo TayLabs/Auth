@@ -9,7 +9,7 @@ const sendVerifyEmailBodySchema = z.object({
 });
 
 type SendVerifyEmailReqBody = z.infer<typeof sendVerifyEmailBodySchema>;
-type SendVerifyEmailResBody = ResponseBody<{}>;
+type SendVerifyEmailResBody = ResponseBody<undefined>;
 
 export {
   sendVerifyEmailBodySchema,
