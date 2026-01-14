@@ -11,13 +11,14 @@ export const validate = controller<TOTPValidateReqBody, TOTPValidateResBody>(
   async (req, res, _next) => {
     await new TOTP(req).validate(req.body.code);
 
-    const { accessToken } = await new Token(req, res).refresh({
+    const { accessToken, pending } = await new Token(req, res).refresh({
       resolve: '2fa',
     });
 
     res.status(HttpStatus.OK).json({
       success: true,
       data: {
+        pending,
         accessToken,
       },
     });

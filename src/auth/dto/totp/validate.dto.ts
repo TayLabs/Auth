@@ -1,3 +1,4 @@
+import { PendingActionType } from '@/auth/services/Token.service';
 import { type ResponseBody } from '@/types/ResponseBody';
 import z from 'zod';
 
@@ -10,6 +11,7 @@ const totpValidateBodySchema = z.object({
 
 type TOTPValidateReqBody = z.infer<typeof totpValidateBodySchema>;
 type TOTPValidateResBody = ResponseBody<{
+  pending: PendingActionType;
   accessToken: string;
 }>;
 
