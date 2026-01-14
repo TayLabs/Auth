@@ -48,7 +48,7 @@ export const verify = controller<
 >(async (req, res, _next) => {
   await EmailVerification.verify(req.query.t);
 
-  await new Token(req, res).refresh({ resolve: 'emailVerification' });
+  // await new Token(req, res).refresh({ resolve: 'emailVerification' }); // User may use a different browser
 
   res.status(HttpStatus.OK).json({
     success: true,
