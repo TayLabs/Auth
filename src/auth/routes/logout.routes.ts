@@ -9,7 +9,7 @@ const logoutRouter = Router({ mergeParams: true });
 
 logoutRouter.delete('/all', authenticate(), logoutAll); // This is called before /:deviceId to avoid conflicts
 logoutRouter.delete(
-  '/{:deviceId}',
+  '/',
   authenticate(),
   validateQueryParams(logoutQueryParamsSchema),
   logout
