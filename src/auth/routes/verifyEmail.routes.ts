@@ -15,7 +15,7 @@ const verifyEmailRouter = express.Router({ mergeParams: true });
 verifyEmailRouter.post(
   '/verify/request',
   verifyEmailLimiter,
-  authenticate({ acceptPending: 'emailVerification' }),
+  authenticate({ acceptPending: ['emailVerification'] }),
   validateBody(sendVerifyEmailBodySchema),
   sendVerify
 );

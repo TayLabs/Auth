@@ -9,7 +9,7 @@ const totpRouter = express.Router({ mergeParams: true });
 
 totpRouter.post(
   '/validate',
-  authenticate({ acceptPending: '2fa' }), // Allows token's marked as pending 2fa
+  authenticate({ acceptPending: ['2fa'] }), // Allows token's marked as pending 2fa
   validateBody(totpValidateBodySchema),
   validate
 );
