@@ -17,6 +17,17 @@ export default class TOTP {
     this._req = req;
   }
 
+  public async getAll() {
+    const { encryptedSecret, encryptionAuthTag, encryptionIv, ...columns } =
+      getTableColumns(totpTokenTable);
+    const results = await db
+      .select(columns)
+      .from(totpTokenTable)
+      .where(eq(totpTokenTable.userId, this._req.user.id));
+
+    return results;
+  }
+
   public async create() {
     const secret = authenticator.generateSecret(20);
     const otpAuthUri = authenticator.keyuri('email', 'TayLabAuth', secret);

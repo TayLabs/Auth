@@ -5,12 +5,19 @@ import totpCreateBodySchema from '../dto/totpCreate.dto';
 import totpRemoveParamsSchema from '../dto/totpRemove.dto';
 import {
   totpCreateController,
+  totpGetAllController,
   totpRemoveController,
   totpVerifyController,
 } from '../controllers/totp.controllers';
 import totpVerifyBodySchema from '@/account/dto/totpVerify.dto';
 
 const totpRouter = Router({ mergeParams: true });
+
+totpRouter.get(
+  '/',
+  authenticate({ allow: ['user.read'] }),
+  totpGetAllController
+);
 
 totpRouter.post(
   '/create',

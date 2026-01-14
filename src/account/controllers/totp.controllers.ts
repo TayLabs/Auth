@@ -12,6 +12,20 @@ import type {
   TOTPRemoveResBody,
 } from '../dto/totpRemove.dto';
 import { TOTPVerifyReqBody, TOTPVerifyResBody } from '../dto/totpVerify.dto';
+import { TOTPGetAllResBody } from '../dto/totpGetAll.dto';
+
+export const totpGetAllController = controller<undefined, TOTPGetAllResBody>(
+  async (req, res, _next) => {
+    const totpTokens = await new TOTP(req).getAll();
+
+    res.status(HttpStatus.CREATED).json({
+      success: true,
+      data: {
+        totpTokens,
+      },
+    });
+  }
+);
 
 export const totpCreateController = controller<
   TOTPCreateReqBody,
