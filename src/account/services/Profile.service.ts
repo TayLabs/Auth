@@ -34,10 +34,6 @@ export default class Profile {
   public async update(
     data: Partial<Omit<typeof profileTable.$inferInsert, 'id' | 'userId'>>
   ): Promise<ProfileType> {
-    if (Object.keys(data).length > 0) {
-      throw new AppError('Nothing has been changed', HttpStatus.BAD_REQUEST);
-    }
-
     const result = (
       await db
         .update(profileTable)
