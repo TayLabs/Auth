@@ -7,6 +7,7 @@ const updateBodySchema = z.object({
   lastName: z.string().min(1).max(128).optional(),
   displayName: z.string().min(1).max(256).optional(),
   username: z.string().min(3).max(256).optional(),
+  bio: z.string().optional(),
 });
 
 type UpdateProfileReqBody = z.infer<typeof updateBodySchema>;

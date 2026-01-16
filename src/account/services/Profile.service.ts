@@ -9,49 +9,49 @@ import AppError from '@/types/AppError';
 import HttpStatus from '@/types/HttpStatus.enum';
 
 export default class Profile {
-	private _userId: UUID;
+  private _userId: UUID;
 
-	constructor(userId: UUID) {
-		this._userId = userId;
-	}
+  constructor(userId: UUID) {
+    this._userId = userId;
+  }
 
-	public async get(): Promise<Omit<User, 'passwordHash'>> {
-		const { passwordHash, ...userColumns } = getTableColumns(userTable);
-		const { userId, ...profileColumns } = getTableColumns(profileTable);
+  public async get(): Promise<Omit<User, 'passwordHash'>> {
+    const { passwordHash, ...userColumns } = getTableColumns(userTable);
+    const { userId, ...profileColumns } = getTableColumns(profileTable);
 
-		const result = await db
-			.select({
-				...userColumns,
-				profile: profileColumns,
-			})
-			.from(userTable)
-			.innerJoin(profileTable, eq(userTable.id, profileTable.userId))
-			.where(eq(userTable.id, this._userId));
+    const result = await db
+      .select({
+        ...userColumns,
+        profile: profileColumns,
+      })
+      .from(userTable)
+      .innerJoin(profileTable, eq(userTable.id, profileTable.userId))
+      .where(eq(userTable.id, this._userId));
 
-		return result[0];
-	}
+    return result[0];
+  }
 
-	public async update(
-		data: Partial<Omit<typeof profileTable.$inferInsert, 'id' | 'userId'>>
-	): Promise<ProfileType> {
-		if (Object.keys(data).length > 0) {
-			throw new AppError('Nothing has been changed', HttpStatus.BAD_REQUEST);
-		}
+  public async update(
+    data: Partial<Omit<typeof profileTable.$inferInsert, 'id' | 'userId'>>
+  ): Promise<ProfileType> {
+    if (Object.keys(data).length > 0) {
+      throw new AppError('Nothing has been changed', HttpStatus.BAD_REQUEST);
+    }
 
-		const result = (
-			await db
-				.update(profileTable)
-				.set({
-					username: data.username,
-					firstName: data.firstName,
-					lastName: data.lastName,
-					displayName: data.displayName,
-					bio: data.bio,
-				})
-				.where(eq(profileTable.userId, this._userId))
-				.returning()
-		)[0];
+    const result = (
+      await db
+        .update(profileTable)
+        .set({
+          username: data.username,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          displayName: data.displayName,
+          bio: data.bio,
+        })
+        .where(eq(profileTable.userId, this._userId))
+        .returning()
+    )[0];
 
-		return result;
-	}
+    return result;
+  }
 }
