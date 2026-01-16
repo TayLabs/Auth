@@ -94,10 +94,11 @@ services:
     profiles: ['development', 'production', 'test']
 
   taylab-auth:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ${CONTAINER_PREFIX:-taylab-auth}-api
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: taylabs-auth # Run pnpm docker:build beforehand, then run docker compose --profile production up -d
+    container_name: ${CONTAINER_PREFIX:-taylab-auth}-auth
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@${CONTAINER_PREFIX:-taylab-auth}postgres:5432/auth
@@ -109,7 +110,8 @@ services:
       TOTP_ENCRYPT_KEY:
       RESET_TOKEN_HASH_KEY:
       EMAIL_VERIFICATION_SECRET:
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000 # Set to publicly exposed url for validation when sending an email with link too it
+      HOST_DOMAIN: localhost # root public url used for setting cookie's domain attribute (i.e. *.domain.com)
     depends_on:
       postgres:
         condition: service_healthy
