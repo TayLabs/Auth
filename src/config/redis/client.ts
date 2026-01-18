@@ -14,7 +14,11 @@ redisClient.on('connect', () => {
 redisClient.on('error', async (err) => {
 	console.error('🛑 Redis connection error:', err);
 	await redisClient.quit(); // Prevents multiple connection attempts
-	process.exit(1);
+
+	// Only exit in non-test environments
+	if (process.env.NODE_ENV !== 'test') {
+		process.exit(1);
+	}
 });
 
 export default redisClient;

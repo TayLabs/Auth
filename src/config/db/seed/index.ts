@@ -10,23 +10,29 @@ import {
 	userRoleTable,
 } from '../schema/index.schema';
 import prod from './prod.data';
+import testData from './test.data';
 import fetchPermissions from '../utils/fetchPermissions';
-import { and, eq, getTableColumns, or, sql } from 'drizzle-orm';
+import { eq, getTableColumns, or, sql } from 'drizzle-orm';
+import { UUID } from 'node:crypto';
 
 export default async function seed(options?: { includeTestData: boolean }) {
 	try {
-		const config = await fetchPermissions();
+		const config = options?.includeTestData
+			? testData.serviceConfigs
+			: await fetchPermissions();
 
 		await db.transaction(async (tx) => {
-			// insert service, roles, and permissions
-			await tx
-				.insert(serviceTable)
-				.values(
-					config.map((repo) => ({
-						name: repo.service,
-					}))
-				)
-				.onConflictDoNothing();
+			// insert service, roles, and permissions (only if config exists)
+			if (config.length > 0) {
+				await tx
+					.insert(serviceTable)
+					.values(
+						config.map((repo) => ({
+							name: repo.service,
+						})),
+					)
+					.onConflictDoNothing();
+			}
 
 			const services = await tx.select().from(serviceTable);
 
@@ -40,7 +46,7 @@ export default async function seed(options?: { includeTestData: boolean }) {
 							repo?.permissions.map((permission) => ({
 								...permission,
 								serviceId: service.id,
-							}))
+							})),
 						)
 						.onConflictDoNothing();
 				}
@@ -53,39 +59,49 @@ export default async function seed(options?: { includeTestData: boolean }) {
 				.from(permissionTable)
 				.innerJoin(
 					serviceTable,
-					eq(serviceTable.id, permissionTable.serviceId)
+					eq(serviceTable.id, permissionTable.serviceId),
 				);
 
-			// insert user/profiles
 			await tx
 				.insert(userTable)
 				.values(
 					await Promise.all(
-						prod.users.map(async (user) => ({
-							...user,
-							passwordHash: await Password.hashAsync(user.passwordHash),
-						}))
-					)
+						(options?.includeTestData ? testData.users : prod.users).map(
+							async (user) => ({
+								...user,
+								passwordHash: await Password.hashAsync(user.passwordHash),
+							}),
+						),
+					),
 				)
 				.onConflictDoNothing();
-			await tx.insert(profileTable).values(prod.profiles).onConflictDoNothing();
+			await tx
+				.insert(profileTable)
+				.values(options?.includeTestData ? testData.profiles : prod.profiles)
+				.onConflictDoNothing();
 
 			// insert service, roles, and permissions
 			await tx
 				.insert(roleTable)
-				.values(prod.roles.map((role) => ({ ...role, isExternal: false }))) // all seeded roles are internal only and cannot be edited
+				.values(
+					(options?.includeTestData ? testData.roles : prod.roles).map(
+						(role) => ({ ...role, isExternal: false }),
+					),
+				) // all seeded roles are internal only and cannot be edited
 				.onConflictDoUpdate({
 					target: roleTable.id,
 					set: {
 						name: sql.raw(`excluded.${roleTable.name.name}`),
 						assignToNewUser: sql.raw(
-							`excluded.${roleTable.assignToNewUser.name}`
+							`excluded.${roleTable.assignToNewUser.name}`,
 						),
 						isExternal: sql.raw(`excluded.${roleTable.isExternal.name}`),
 					},
 				});
 
-			for (const role of prod.roles) {
+			for (const role of options?.includeTestData
+				? testData.roles
+				: prod.roles) {
 				const current = await tx
 					.select({
 						...getTableColumns(permissionTable),
@@ -94,11 +110,11 @@ export default async function seed(options?: { includeTestData: boolean }) {
 					.from(permissionTable)
 					.innerJoin(
 						serviceTable,
-						eq(serviceTable.id, permissionTable.serviceId)
+						eq(serviceTable.id, permissionTable.serviceId),
 					)
 					.innerJoin(
 						rolePermissionTable,
-						eq(rolePermissionTable.permissionId, permissionTable.id)
+						eq(rolePermissionTable.permissionId, permissionTable.id),
 					)
 					.where(eq(rolePermissionTable.roleId, role.id));
 
@@ -108,22 +124,23 @@ export default async function seed(options?: { includeTestData: boolean }) {
 							!current.find(
 								(permission) =>
 									permission.service === permissionKey.split(':')[0] &&
-									permission.key === permissionKey.split(':')[1]
-							)
+									permission.key === permissionKey.split(':')[1],
+							),
 					)
 					.map((key) => ({
-						permissionId: permissions.find(
-							(permission) =>
-								permission.service.name === key.split(':')[0] &&
-								permission.key === key.split(':')[1]
-						)!.id,
+						permissionId:
+							permissions.find(
+								(permission) =>
+									permission.service.name === key.split(':')[0] &&
+									permission.key === key.split(':')[1],
+							)?.id || ('' as UUID),
 						roleId: role.id,
 					}));
 				const toRemove = current.filter(
 					(permission) =>
 						!role.permissions.includes(
-							`${permission.service}:${permission.key}`
-						)
+							`${permission.service}:${permission.key}`,
+						),
 				);
 
 				if (toAdd.length > 0) {
@@ -136,16 +153,18 @@ export default async function seed(options?: { includeTestData: boolean }) {
 						.where(
 							or(
 								...toRemove.map((permission) =>
-									eq(rolePermissionTable.permissionId, permission.id)
-								)
-							)
+									eq(rolePermissionTable.permissionId, permission.id),
+								),
+							),
 						);
 				}
 			}
-			for (const user of prod.users) {
-				const filtered = prod.roles.filter((role) =>
-					user.roles.includes(role.name)
-				);
+			for (const user of options?.includeTestData
+				? testData.users
+				: prod.users) {
+				const filtered = (
+					options?.includeTestData ? testData.roles : prod.roles
+				).filter((role) => user.roles.includes(role.name));
 				if (filtered.length > 0) {
 					await tx
 						.insert(userRoleTable)
@@ -153,7 +172,7 @@ export default async function seed(options?: { includeTestData: boolean }) {
 							filtered.map((role) => ({
 								userId: user.id,
 								roleId: role.id,
-							}))
+							})),
 						)
 						.onConflictDoNothing();
 				}
