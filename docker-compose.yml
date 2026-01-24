@@ -2,7 +2,7 @@ name: ${CONTAINER_PREFIX:-taylab}-auth-services
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:18-alpine
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-postgres
     restart: unless-stopped
     environment:
@@ -12,7 +12,7 @@ services:
     ports:
       - '5313:5432'
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/18/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U tayLabAuth -d auth']
       interval: 10s
@@ -21,7 +21,7 @@ services:
     profiles: ['development', 'production', 'test']
 
   redis:
-    image: redis:latest
+    image: redis:alpine
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-redis
     restart: unless-stopped
     ports:
@@ -36,7 +36,7 @@ services:
     profiles: ['development', 'production', 'test']
 
   keys-postgres:
-    image: postgres:latest
+    image: postgres:18-alpine
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-keys-postgres
     restart: unless-stopped
     environment:
@@ -46,7 +46,7 @@ services:
     ports:
       - '3313:5432'
     volumes:
-      - keys-postgres:/var/lib/postgresql/data
+      - keys-postgres:/var/lib/postgresql/18/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U tayLabKeys -d keys']
       interval: 10s
@@ -101,15 +101,15 @@ services:
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-auth
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@${CONTAINER_PREFIX:-taylab-auth}postgres:5432/auth
+      DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@${CONTAINER_PREFIX:-taylab-auth}-postgres:5432/auth
       REDIS_URI: redis:6313
       MAIL_API: ${CONTAINER_PREFIX:-taylab-auth}-mail:7212
       MAIL_API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       ACCESS_TOKEN_SECRET: aopvnwoaht
-      REFRESH_TOKEN_SECRET:
-      TOTP_ENCRYPT_KEY:
-      RESET_TOKEN_HASH_KEY:
-      EMAIL_VERIFICATION_SECRET:
+      REFRESH_TOKEN_SECRET: povnawonsd
+      TOTP_ENCRYPT_KEY: vapownrosfg
+      RESET_TOKEN_HASH_KEY: avpibnsaouie
+      EMAIL_VERIFICATION_SECRET: voihawnroghaso
       FRONTEND_URL: http://localhost:3000 # Set to publicly exposed url for validation when sending an email with link too it
       HOST_DOMAIN: localhost # root public url used for setting cookie's domain attribute (i.e. *.domain.com)
     depends_on:
