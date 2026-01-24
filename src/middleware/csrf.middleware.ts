@@ -17,19 +17,21 @@ const exclude = [
 ];
 
 export const csrf: RequestHandler = (req, res, next) => {
-	// Skip CSRF when running tests (check process.env directly since it's set by jest)
-	if (process.env.NODE_ENV === 'test') return next();
-
-	// If the request path matches any exclude pattern, skip CSRF
-	if (exclude.some((path) => isMatch(req.path, path))) return next();
-
-	return csurf({
-		cookie: {
-			key: '_csrf',
-			path: '/',
-			httpOnly: true, // CSRF cookie can't be accessed via JavaScript
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
-		},
-	})(req, res, next);
+	if (process.env.NODE_ENV === 'test') {
+		// Skip CSRF when running tests (check process.env directly since it's set by jest)
+		return next();
+	} else if (exclude.some((path) => isMatch(req.path, path))) {
+		// If the request path matches any exclude pattern, skip CSRF
+		return next();
+	} else {
+		return csurf({
+			cookie: {
+				key: '_csrf',
+				path: '/',
+				httpOnly: true, // CSRF cookie can't be accessed via JavaScript
+				secure: process.env.NODE_ENV === 'production',
+				sameSite: 'strict',
+			},
+		})(req, res, next);
+	}
 };
