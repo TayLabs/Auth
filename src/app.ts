@@ -11,6 +11,7 @@ import { accountRoutes } from './account/routes/index.routes';
 import { adminRoutes } from './admin/routes/index.routes';
 import { csrf } from './middleware/csrf.middleware';
 import { globalRateLimit } from './middleware/rateLimiters/index.limiter';
+import { generalRoutes } from './general/routes/index.routes';
 
 const app = express();
 
@@ -19,7 +20,7 @@ app.use(
 	cors({
 		origin: true,
 		credentials: true,
-	})
+	}),
 );
 
 // Parse application/x-www-form-urlencoded and application/json requests
@@ -42,6 +43,7 @@ app.use(globalRateLimit);
 app.use(useragent());
 
 // Register routes (anything exported from /*/routes/*.router.ts)
+app.use('/api/v1', generalRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/account', accountRoutes);
 app.use('/api/v1/admin', adminRoutes);

@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN apk add --no-cache git
 RUN npm install
 COPY . ./
-RUN npm run build
+RUN npm run build -p tsconfig.build.json
 
 # Production stage
 FROM node:24-alpine AS production
