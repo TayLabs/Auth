@@ -3,7 +3,9 @@ import type { Config } from 'jest';
 export default {
 	preset: 'ts-jest',
 	testEnvironment: 'node',
-	testMatch: ['**/*.e2e-spec.ts'],
+	testMatch: [
+		'**/*.e2e-spec.ts', // end-2-end tests
+	],
 	moduleNameMapper: {
 		'^@/(.*)$': '<rootDir>/../src/$1', // Maps @/ to ../src folder when importing app.ts in tests
 	},
