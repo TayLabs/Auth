@@ -11,11 +11,11 @@ services:
     environment:
       POSTGRES_DB: auth
       POSTGRES_USER: tayLabAuth
-      POSTGRES_PASSWORD: hvpoawev0wqh-sabipegpa!
+      POSTGRES_PASSWORD: bopahroitnaosf
     ports:
       - "5313:5432"
     volumes:
-      - postgres:/var/lib/postgresql/18/data
+      - postgres:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tayLabAuth -d auth"]
       interval: 10s
