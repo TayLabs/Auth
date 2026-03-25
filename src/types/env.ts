@@ -1,127 +1,119 @@
-import z from 'zod';
-import dotenv from 'dotenv';
+import z from "zod";
+import dotenv from "dotenv";
 
 // Only load .env files with 'dotenv' if in development mode
-if (process.env.NODE_ENV === 'development') {
-  dotenv.config({ path: '.env', quiet: true });
+if (process.env.NODE_ENV === "development") {
+  dotenv.config({ path: ".env", quiet: true });
   dotenv.config({
-    path: '.env.local',
+    path: ".env.local",
     override: true,
     quiet: true, // Disable logs/tips
   });
-} else if (process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: '.env', quiet: true });
-  dotenv.config({ path: '.env.test', override: true, quiet: true });
+} else if (process.env.NODE_ENV === "test") {
+  dotenv.config({ path: ".env", quiet: true });
+  dotenv.config({ path: ".env.test", override: true, quiet: true });
 }
 
 const envSchema = z.object({
   NODE_ENV: z
-    .enum(['development', 'production', 'test'], {
-      error: 'Must be set to development, production, or test',
+    .enum(["development", "production", "test"], {
+      error: "Must be set to development, production, or test",
     })
-    .default('production'),
+    .default("production"),
   PORT: z
     .string()
-    .regex(/^\d+$/, 'Not a valid number')
-    .default('7313')
+    .regex(/^\d+$/, "Not a valid number")
+    .default("7313")
     .transform(Number),
-  DATABASE_URL: z.url('Must be a valid url for the database'),
-  REDIS_URI: z
-    .string('Must include Redis connection string (Format: "[ipaddr]:[port]")')
-    .regex(/\b[\w.-]+:(\d{1,5})\b/, 'Invalid format, use "[host]:[port]"')
-    .transform((str) => {
-      const [host, port] = str.split(':');
-
-      return {
-        HOST: host,
-        PORT: parseInt(port),
-      };
-    }),
+  DATABASE_URL: z.url("Must be a valid url for the database"),
+  REDIS_URI: z.string(
+    'Must include Redis connection string (Format: "[ipaddr]:[port]")',
+  ),
   MAIL_API: z
     .string(
-      'Must include Mail service connection string (Format: "[ipaddr]:[port]")'
+      'Must include Mail service connection string (Format: "[ipaddr]:[port]")',
     )
     .regex(/\b[\w.-]+:(\d{1,5})\b/, 'Invalid format, use "[host]:[port]')
     .transform((str) => {
-      const [host, port] = str.split(':');
+      const [host, port] = str.split(":");
 
       return {
         HOST: host,
         PORT: parseInt(port),
       };
     }),
-  MAIL_API_KEY: z.string('Must include api key for mail service'),
+  MAIL_API_KEY: z.string("Must include api key for mail service"),
   API_KEY_TTL: z
     .string()
-    .regex(/^\d+(h|d)$/, 'Must be a valid length of days (suffix: d)')
-    .default('30d'),
+    .regex(/^\d+(h|d)$/, "Must be a valid length of days (suffix: d)")
+    .default("30d"),
   ACCESS_TOKEN_SECRET: z
-    .string('Must be a valid string of characters')
-    .min(6, 'Must be at least 6 characters long')
-    .max(24, 'Must be at most 24 characters long'),
+    .string("Must be a valid string of characters")
+    .min(6, "Must be at least 6 characters long")
+    .max(24, "Must be at most 24 characters long"),
   ACCESS_TOKEN_TTL: z
     .string()
     .regex(
       /^\d+(m|h)$/,
-      'Must be a valid timespan in minutes or hours (suffix: m | h)'
+      "Must be a valid timespan in minutes or hours (suffix: m | h)",
     )
-    .default('15m')
-    .transform((str) => str as `${number}${'m' | 'h'}`),
+    .default("15m")
+    .transform((str) => str as `${number}${"m" | "h"}`),
   REFRESH_TOKEN_SECRET: z
-    .string('Must be a valid string of characters')
-    .min(12, 'Must be at least 12 characters long')
-    .max(32, 'Must be at most 32 characters long'),
+    .string("Must be a valid string of characters")
+    .min(12, "Must be at least 12 characters long")
+    .max(32, "Must be at most 32 characters long"),
   REFRESH_TOKEN_TTL: z
     .string()
-    .regex(/^\d+(h|d)$/, 'Must be a valid length of days (suffix: d)')
-    .default('30d')
-    .transform((str) => str as `${number}${'h' | 'd'}`),
+    .regex(/^\d+(h|d)$/, "Must be a valid length of days (suffix: d)")
+    .default("30d")
+    .transform((str) => str as `${number}${"h" | "d"}`),
   CHECK_PASSWORD_COMPLEXITY: z
     .string()
-    .regex(/^(true|false)$/, 'Must be true or false')
-    .transform((str) => (str === 'true' ? true : false))
+    .regex(/^(true|false)$/, "Must be true or false")
+    .transform((str) => (str === "true" ? true : false))
     .default(false),
   TOTP_ENCRYPT_KEY: z
-    .string('Must be a valid string of characters')
-    .min(12, 'Must be at least 12 characters long')
-    .max(32, 'Must be at most 32 characters long')
-    .transform((str) => Buffer.from(str).toString('base64')),
+    .string("Must be a valid string of characters")
+    .min(12, "Must be at least 12 characters long")
+    .max(32, "Must be at most 32 characters long")
+    .transform((str) => Buffer.from(str).toString("base64")),
   RESET_TOKEN_HASH_KEY: z
-    .string('Must be a valid string of characters')
-    .min(12, 'Must be at least 12 characters long')
-    .max(32, 'Must be at most 32 characters long')
-    .transform((str) => Buffer.from(str).toString('base64')),
+    .string("Must be a valid string of characters")
+    .min(12, "Must be at least 12 characters long")
+    .max(32, "Must be at most 32 characters long")
+    .transform((str) => Buffer.from(str).toString("base64")),
   RESET_TOKEN_TTL: z
     .string()
     .regex(
       /^\d+(m|h)$/,
-      'Must be a valid timespan in minutes or hours (suffix: m | h)'
+      "Must be a valid timespan in minutes or hours (suffix: m | h)",
     )
-    .default('15m'),
+    .default("15m"),
   EMAIL_VERIFICATION_SECRET: z
-    .string('Must be a valid string of characters')
-    .min(6, 'Must be at least 6 characters long')
-    .max(24, 'Must be at most 24 characters long'),
+    .string("Must be a valid string of characters")
+    .min(6, "Must be at least 6 characters long")
+    .max(24, "Must be at most 24 characters long"),
   EMAIL_VERIFICATION_TTL: z
     .string()
     .regex(
       /^\d+(m|h)$/,
-      'Must be a valid timespan in minutes or hours (suffix: m | h)'
+      "Must be a valid timespan in minutes or hours (suffix: m | h)",
     )
-    .default('10m'),
-  FRONTEND_URL: z.url('Please include a front-end url for use in redirects'),
+    .default("10m"),
+  FRONTEND_URL: z.url("Please include a front-end url for use in redirects"),
   HOST_DOMAIN: z.string(),
-  SERVICE_NAME: z.string().default('auth'),
+  SERVICE_NAME: z.string().default("auth"),
   ADMIN: z
     .string()
     .regex(
       /[a-zA-Z0-9]@+:[a-zA-Z0-9]+/,
-      'Must be a valid format like (email@example.com:password)'
+      "Must be a valid format like (email@example.com:password)",
     )
-    .default('admin:admin') // password change is forced if password === default
+    .default("admin:admin") // password change is forced if password === default
     .transform((str) => ({
-      EMAIL: str?.split(':')[0],
-      PASSWORD: str?.split(':')[1],
+      EMAIL: str?.split(":")[0],
+      PASSWORD: str?.split(":")[1],
     })),
 });
 type EnvVariables = z.infer<typeof envSchema>;
@@ -132,15 +124,15 @@ try {
 } catch (error) {
   if (error instanceof z.ZodError) {
     const errorTree = z.treeifyError<EnvVariables>(
-      error as z.ZodError<EnvVariables>
+      error as z.ZodError<EnvVariables>,
     ).properties;
 
     console.error(
-      '❌ Invalid environment variables:',
+      "❌ Invalid environment variables:",
       errorTree &&
         Object.entries(errorTree).map(
-          ([key, value]) => `${key}: ${value.errors.join(', ')}`
-        )
+          ([key, value]) => `${key}: ${value.errors.join(", ")}`,
+        ),
     );
     process.exit(1);
   }

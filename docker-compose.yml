@@ -1,3 +1,6 @@
+# Use this as a template file or during development
+# DO NOT use it in production as the database password and secrets are hard-coded
+
 name: ${CONTAINER_PREFIX:-taylab}-auth-services
 
 services:
@@ -10,30 +13,32 @@ services:
       POSTGRES_USER: tayLabAuth
       POSTGRES_PASSWORD: hvpoawev0wqh-sabipegpa!
     ports:
-      - '5313:5432'
+      - "5313:5432"
     volumes:
       - postgres:/var/lib/postgresql/18/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U tayLabAuth -d auth']
+      test: ["CMD-SHELL", "pg_isready -U tayLabAuth -d auth"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles: ['development', 'production', 'test']
+    profiles: ["development", "production", "test"]
 
   redis:
     image: redis:alpine
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-redis
     restart: unless-stopped
     ports:
-      - '6313:6379'
+      - "6313:6379"
+    environment:
+      - REDIS_PASSWORD=password
     volumes:
       - redis:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles: ['development', 'production', 'test']
+    profiles: ["development", "production", "test"]
 
   keys-postgres:
     image: postgres:18-alpine
@@ -44,22 +49,22 @@ services:
       POSTGRES_USER: tayLabKeys
       POSTGRES_PASSWORD: onaroewth4p9g8ahsoef
     ports:
-      - '3313:5432'
+      - "3313:5432"
     volumes:
       - keys-postgres:/var/lib/postgresql/18/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U tayLabKeys -d keys']
+      test: ["CMD-SHELL", "pg_isready -U tayLabKeys -d keys"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles: ['development', 'production', 'test']
+    profiles: ["development", "production", "test"]
 
   taylab-keys:
-    image: taylabs-keys # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
+    image: taylorkelley/taylabs-keys
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-keys
     restart: unless-stopped
     ports:
-      - '2313:7212'
+      - "2313:7212"
     environment:
       DATABASE_URL: postgres://tayLabKeys:onaroewth4p9g8ahsoef@${CONTAINER_PREFIX:-taylab-auth}-keys-postgres:5432/keys
       ACCESS_TOKEN_SECRET: aopvnwoaht
@@ -68,41 +73,41 @@ services:
       keys-postgres:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -I http://localhost:7212']
+      test: ["CMD-SHELL", "curl -I http://localhost:7212"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles: ['development', 'production', 'test']
+    profiles: ["development", "production", "test"]
 
   taylab-mail:
-    image: taylabs-mail # If the compose fails, be sure to clone this repo and run the docker:build script beforehand
+    image: taylorkelley/taylabs-mail
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-mail
     restart: unless-stopped
     environment:
       KEY_SERVICE_BASE_URL: http://${CONTAINER_PREFIX:-taylab-auth}-keys:7212
       MAILTRAP_API_KEY: ${MAILTRAP_API_KEY} # Set with export MAILTRAP_API_KEY=value (setx for powershell)
     ports:
-      - '4313:7414'
+      - "4313:7414"
     depends_on:
       taylab-keys:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -I http://localhost:4313']
+      test: ["CMD-SHELL", "curl -I http://localhost:4313"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles: ['development', 'production', 'test']
+    profiles: ["development", "production", "test"]
 
   taylab-auth:
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    image: taylabs-auth # Run pnpm docker:build beforehand, then run docker compose --profile production up -d
+    image: taylorkelley/taylabs-auth
     container_name: ${CONTAINER_PREFIX:-taylab-auth}-auth
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://tayLabAuth:hvpoawev0wqh-sabipegpa!@${CONTAINER_PREFIX:-taylab-auth}-postgres:5432/auth
-      REDIS_URI: redis:6313
+      REDIS_URI: rediss://:password@${CONTAINER_PREFIX:-taylab-auth}-redis:6313
       MAIL_API: ${CONTAINER_PREFIX:-taylab-auth}-mail:7212
       MAIL_API_KEY: ${MAIL_API_KEY} # Set with export MAIL_API_KEY=value (setx for powershell)
       ACCESS_TOKEN_SECRET: aopvnwoaht
@@ -120,8 +125,8 @@ services:
       taylab-mail:
         condition: service_healthy
     ports:
-      - '7313:7313'
-    profiles: ['production']
+      - "7313:7313"
+    profiles: ["production"]
 
 volumes:
   postgres:
