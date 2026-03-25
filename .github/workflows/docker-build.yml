@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: docker
+    environment: Docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 # v4 is compatible with Node 24
