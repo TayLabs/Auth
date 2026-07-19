@@ -29,6 +29,9 @@ const envSchema = z.object({
   REDIS_URI: z.string(
     'Must include Redis connection string (Format: "[ipaddr]:[port]")',
   ),
+  REDIS_CREDENTIALS: z.string(
+    'Must include Redis credentials (Format: "[username]:[password]")',
+  ),
   MAIL_API: z
     .string(
       'Must include Mail service connection string (Format: "[ipaddr]:[port]")',

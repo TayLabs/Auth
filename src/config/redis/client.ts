@@ -3,6 +3,8 @@ import Redis from "ioredis";
 
 const redisClient = new Redis(env.REDIS_URI, {
   maxRetriesPerRequest: 3,
+  username: env.REDIS_CREDENTIALS.split(":")[0],
+  password: env.REDIS_CREDENTIALS.split(":")[1],
 });
 
 redisClient.on("connect", () => {
