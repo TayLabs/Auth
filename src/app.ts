@@ -14,6 +14,8 @@ import { globalRateLimit } from './middleware/rateLimiters/index.limiter';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // CORS
 app.use(
 	cors({
